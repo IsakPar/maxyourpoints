@@ -9,11 +9,7 @@ interface CategoryTagProps {
 }
 
 const CategoryTag = ({ children }: CategoryTagProps) => {
-  return (
-    <div className="px-2.5 py-1 bg-transparent rounded-md outline outline-1 outline-stone-950/20 flex justify-start items-start">
-      <div className="text-stone-950 text-sm font-bold font-['Inter'] leading-tight">{children}</div>
-    </div>
-  )
+  return <span className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 text-sm font-medium">{children}</span>
 }
 
 interface BlogPostProps {
@@ -115,20 +111,18 @@ const OutlinedGradientButton = ({ href, children }: OutlinedGradientButtonProps)
   return buttonContent
 }
 
-export interface BlogPost {
-  id: number
-  title: string
-  summary: string
-  category: string
-  readTime: string
-  image: string
-  slug: string
-}
-
-export interface BlogShowcaseProps {
+interface BlogShowcaseProps {
   title?: string
   subtitle?: string
-  posts?: BlogPost[]
+  posts?: Array<{
+    id: number
+    title: string
+    summary: string
+    category: string
+    readTime: string
+    image: string
+    slug: string
+  }>
   className?: string
 }
 
@@ -140,7 +134,7 @@ const BlogShowcase: React.FC<BlogShowcaseProps> = ({
   className = "",
 }) => {
   // Default blog posts if none are provided
-  const defaultPosts: BlogPost[] = [
+  const defaultPosts = [
     {
       id: 1,
       title: "Maximize Your Airline Points",
@@ -212,9 +206,11 @@ const BlogShowcase: React.FC<BlogShowcaseProps> = ({
       </div>
 
       <div className="self-stretch flex flex-col justify-start items-center md:items-end gap-4">
-        <OutlinedGradientButton href="/blog">
-          View all
-        </OutlinedGradientButton>
+        <Link href="/blog" className="inline-block">
+          <OutlinedGradientButton>
+            View all
+          </OutlinedGradientButton>
+        </Link>
       </div>
     </section>
   )

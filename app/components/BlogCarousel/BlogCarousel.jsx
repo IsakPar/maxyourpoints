@@ -6,6 +6,42 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import PropTypes from "prop-types"
 
+const OutlinedGradientButton = ({ href, children }) => {
+  const style = {
+    background: "white",
+    border: "2px solid transparent",
+    backgroundImage: "linear-gradient(white, white), linear-gradient(to right, #2DD4BF, #EAB308, #EA580C)",
+    backgroundOrigin: "border-box",
+    backgroundClip: "padding-box, border-box",
+    transition: "all 0.5s ease",
+  }
+
+  const buttonContent = (
+    <button
+      className="px-5 py-2.5 text-base font-medium font-['Inter'] rounded-lg text-stone-950 hover:text-orange-500"
+      style={style}
+      onMouseOver={(e) => {
+        e.currentTarget.style.backgroundImage = "linear-gradient(white, white), linear-gradient(to right, #EA580C, #EAB308, #2DD4BF)"
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.backgroundImage = "linear-gradient(white, white), linear-gradient(to right, #2DD4BF, #EAB308, #EA580C)"
+      }}
+    >
+      {children}
+    </button>
+  )
+
+  if (href) {
+    return (
+      <Link href={href} className="inline-block">
+        {buttonContent}
+      </Link>
+    )
+  }
+
+  return buttonContent
+}
+
 const BlogCarousel = ({
   title = "Latest from Our Blog",
   subtitle = "Discover our most recent insights and travel tips",
@@ -326,6 +362,15 @@ const BlogCarousel = ({
             ),
           )}
         </div>
+      </div>
+
+      {/* View All Button */}
+      <div className="flex justify-center mt-8">
+        <Link href="/blog" className="inline-block">
+          <OutlinedGradientButton>
+            View all
+          </OutlinedGradientButton>
+        </Link>
       </div>
     </section>
   )

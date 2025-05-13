@@ -1,214 +1,167 @@
 "use client"
 
 import * as React from "react"
-import BlogShowcase from "../../components/BlogShowcase"
-import Navbar from "../../components/Navbar/Navbar"
-import { ChevronRight } from "lucide-react"
-import { Button } from "../../components/ui/button"
-import { useRouter } from "next/navigation"
-import CTASection from "../../components/CTASection/CTASection"
-
-interface BlogPost {
-  id: number
-  title: string
-  summary: string
-  category: string
-  readTime: string
-  image: string
-  slug: string
-  author: string
-  date: string
-}
-
-const CategoryTag = ({ children }: { children: React.ReactNode }) => {
-  return <span className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 text-sm font-medium">{children}</span>
-}
+import { posts, type BlogPost } from "@/lib/posts"
+import CTASection from "../components/CTASection/CTASection"
+import Footer from "../components/Footer/Footer"
 
 export default function BlogPage() {
-  const router = useRouter()
+  const [activeCategory, setActiveCategory] = React.useState("View All")
 
-  // Sample blog posts data - in a real app, this would come from an API or CMS
-  const blogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: "Maximize Your Airline Points",
-      summary:
-        "Learn how to strategically earn and redeem airline points for maximum value on your next trip. Discover insider techniques that frequent flyers use to get more from their miles and travel further for less.",
-      category: "Airline",
-      readTime: "5 min read",
-      image: "/placeholder.svg?key=1fxec",
-      slug: "/blog/maximize-airline-points",
-      author: "Sarah Johnson",
-      date: "May 10, 2023",
-    },
-    {
-      id: 2,
-      title: "Best Credit Cards for Travel",
-      summary:
-        "Discover the top credit cards that offer exceptional travel rewards, perks, and benefits for frequent travelers. Compare sign-up bonuses, earning rates, and redemption options to find your perfect travel companion.",
-      category: "Credit",
-      readTime: "7 min read",
-      image: "/travel-rewards-cards.png",
-      slug: "/blog/best-credit-cards-travel",
-      author: "Michael Chen",
-      date: "April 28, 2023",
-    },
-    {
-      id: 3,
-      title: "Top Hotels for Budget Travelers",
-      summary:
-        "Find out how to book luxury accommodations without breaking the bank using points, promotions, and insider strategies. Learn which hotel chains offer the best value and how to maximize elite status benefits.",
-      category: "Hotels",
-      readTime: "6 min read",
-      image: "/luxury-hotel-room-with-view.png",
-      slug: "/blog/budget-luxury-hotels",
-      author: "Emma Rodriguez",
-      date: "April 15, 2023",
-    },
-    {
-      id: 4,
-      title: "Hidden Gems: Underrated Destinations",
-      summary:
-        "Explore lesser-known travel destinations that offer incredible experiences without the crowds and high costs. Discover beautiful locations that haven't been overrun by tourism and offer authentic cultural experiences.",
-      category: "Destinations",
-      readTime: "5 min read",
-      image: "/hidden-beach-paradise.png",
-      slug: "/blog/hidden-gem-destinations",
-      author: "David Thompson",
-      date: "March 30, 2023",
-    },
-    {
-      id: 5,
-      title: "Travel Hacking 101: Getting Started",
-      summary:
-        "A beginner's guide to travel hacking with step-by-step instructions on how to start maximizing your travel rewards. Learn the fundamentals of points programs and how to develop a strategy that works for your travel goals.",
-      category: "Guide",
-      readTime: "8 min read",
-      image: "/travel-planning-laptop.png",
-      slug: "/blog/travel-hacking-101",
-      author: "Jessica Williams",
-      date: "March 15, 2023",
-    },
-    {
-      id: 6,
-      title: "First Class for Economy Price",
-      summary:
-        "Strategies for upgrading your flight experience without paying premium prices using points and status. Discover the best times to book, how to leverage airline partnerships, and techniques for successful upgrades.",
-      category: "Airline",
-      readTime: "6 min read",
-      image: "/first-class-cabin.png",
-      slug: "/blog/first-class-economy-price",
-      author: "Robert Garcia",
-      date: "February 28, 2023",
-    },
-    {
-      id: 7,
-      title: "Maximizing Hotel Elite Status",
-      summary:
-        "How to earn and leverage hotel elite status for room upgrades, free breakfast, late checkout, and more perks. Learn which hotel programs offer the best elite benefits and how to fast-track your status.",
-      category: "Hotels",
-      readTime: "7 min read",
-      image: "/luxury-hotel-lobby.png",
-      slug: "/blog/hotel-elite-status",
-      author: "Amanda Lee",
-      date: "February 15, 2023",
-    },
-    {
-      id: 8,
-      title: "Award Booking Sweet Spots",
-      summary:
-        "Discover the best value redemptions across major airline and hotel loyalty programs to maximize your points. Learn which transfer partners offer the best deals and how to find hidden award availability.",
-      category: "Rewards",
-      readTime: "9 min read",
-      image: "/world-flight-paths.png",
-      slug: "/blog/award-booking-sweet-spots",
-      author: "Thomas Wilson",
-      date: "January 30, 2023",
-    },
-  ]
+  const categories = ["View All", "Airline Tips", "Credit Card", "Hotel Reviews", "Travel Hacks"]
 
-  const handleCardClick = (slug: string): void => {
-    router.push(slug)
-  }
-
-  // Custom subscribe handler for the blog page
-  const handleSubscribe = async (email: string): Promise<void> => {
-    // In a real implementation, you would make an API call to your backend
-    console.log(`Blog page subscription with email: ${email}`)
-  }
+  const filteredPosts = activeCategory === "View All" 
+    ? posts 
+    : posts.filter(post => post.category === activeCategory)
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <div className="pt-16">
-        <div className="w-full bg-emerald-100 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-center mb-6">MaxYourPoints Blog</h1>
-            <p className="text-xl text-center max-w-3xl mx-auto">
-              Expert insights, tips, and strategies to help you maximize your travel rewards and explore the world for
-              less.
+    <main>
+      {/* Hero Section */}
+      <section className="bg-[#D1F1EB] py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-16">
+          <div className="flex flex-col lg:flex-row gap-12 items-center">
+            {/* Left Column - Text Content */}
+            <div className="flex-1 space-y-6">
+              <h1 className="text-4xl md:text-5xl font-bold text-stone-900">
+                Unlock Your Travel Potential with Expert Insights
+              </h1>
+              <p className="text-lg text-stone-700">
+                Welcome to our blog, where we empower travelers with valuable tips and insights across various categories. Discover the latest in airline news, credit card rewards, hotel reviews, and travel hacks to maximize your adventures.
+              </p>
+            </div>
+
+            {/* Right Column - Image Placeholder */}
+            <div className="flex-1">
+              <div className="aspect-[4/3] bg-gray-200 rounded-2xl flex items-center justify-center">
+                <span className="text-gray-500 font-medium">Hero Image</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Posts Section with Filters */}
+      <section className="bg-white py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-16">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-900 mb-4">
+              Explore Our Travel Insights
+            </h2>
+            <p className="text-lg text-stone-700">
+              Discover tips, tricks, and stories from our adventures.
             </p>
           </div>
-        </div>
 
-        <div className="bg-teal-50">
-          <BlogShowcase
-            title="All Articles"
-            subtitle="Browse our complete collection of travel hacking insights and strategies."
-            posts={blogPosts.slice(0, 4)}
-          />
+          {/* Category Filters */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-6 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${
+                  activeCategory === category
+                    ? "bg-[#D1F1EB] text-stone-900"
+                    : "bg-gray-50 text-stone-600 hover:bg-gray-100"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
 
-          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-16 py-16 flex flex-col gap-8">
-            <h2 className="text-2xl md:text-3xl font-bold">More Articles</h2>
+          {/* Blog Posts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filteredPosts.map((post: BlogPost) => (
+              <article 
+                key={post.id}
+                className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              >
+                {/* Image Placeholder */}
+                <div className="aspect-[16/9] bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500 font-medium">Image Placeholder</span>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {blogPosts.slice(4).map((post: BlogPost) => (
-                <div
-                  key={post.id}
-                  className="flex flex-col gap-4 bg-white rounded-lg overflow-hidden transition-all duration-300 hover:shadow-elevation cursor-pointer"
-                  onClick={() => handleCardClick(post.slug)}
-                >
-                  <div className="h-48 overflow-hidden">
-                    <img src={post.image || "/placeholder.svg"} alt={post.title} className="w-full h-full object-cover" />
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="px-3 py-1 bg-[#D1F1EB] text-stone-900 rounded-full text-sm font-medium">
+                      {post.category}
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                      {post.readTime}
+                    </span>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
+                  <h2 className="text-xl font-semibold mb-3 hover:text-emerald-600 transition-colors">
+                    {post.title}
+                  </h2>
+                  <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
-                      <CategoryTag>{post.category}</CategoryTag>
-                      <span className="text-sm text-gray-600">{post.readTime}</span>
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-xs text-gray-500">AV</span>
+                      </div>
+                      <span className="text-sm text-gray-600">{post.author}</span>
                     </div>
-                    <h3 className="text-xl font-bold">{post.title}</h3>
-                    <p className="text-sm line-clamp-3">{post.summary}</p>
-                    <a
-                      href={post.slug}
-                      className="mt-2 inline-flex items-center gap-1 text-teal-600 font-medium hover:text-orange-500 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Read more <ChevronRight size={16} />
-                    </a>
+                    <span className="text-sm text-gray-500">{post.date}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="flex justify-center mt-8">
-              <Button variant="outlined">Load more articles</Button>
-            </div>
+              </article>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Updated CTA Section with a different visually engaging design */}
-        <div className="bg-teal-50">
-          <CTASection
-            title="Never Miss a Travel Deal"
-            description="Subscribe to our newsletter and be the first to know about exclusive travel deals and reward opportunities."
-            buttonText="Subscribe"
-            buttonVariant="primary"
-            withSubscribeForm={true}
-            onSubscribe={handleSubscribe}
-            design="overlay-teal"
-          />
+      {/* CTA Section */}
+      <CTASection />
+
+      {/* Additional Blog Posts Section */}
+      <section className="bg-white py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.map((post: BlogPost) => (
+              <article 
+                key={post.id}
+                className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              >
+                {/* Image Placeholder */}
+                <div className="aspect-[16/9] bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500 font-medium">Image Placeholder</span>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="px-3 py-1 bg-[#D1F1EB] text-stone-900 rounded-full text-sm font-medium">
+                      {post.category}
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                      {post.readTime}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-semibold mb-3 hover:text-emerald-600 transition-colors">
+                    {post.title}
+                  </h2>
+                  <p className="text-gray-600 mb-4">
+                    {post.summary}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-xs text-gray-500">AV</span>
+                      </div>
+                      <span className="text-sm text-gray-600">{post.author}</span>
+                    </div>
+                    <span className="text-sm text-gray-500">{post.date}</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* Footer */}
+      <Footer />
+    </main>
   )
 }

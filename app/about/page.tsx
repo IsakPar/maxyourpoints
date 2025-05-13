@@ -1,12 +1,22 @@
 "use client"
 
 import * as React from "react"
+import AboutHero from "./AboutHero"
+import AboutStory from "./AboutStory"
+import { AboutTeam } from "./AboutTeam"
+import { AboutBenefits } from "./AboutBenefits"
+import Footer from "../components/Footer/Footer"
+import CTASection from "../components/CTASection/CTASection"
 
 export default function AboutPage() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-6">About Us</h1>
-      <p className="text-lg">Learn more about Max Your Points and our mission to help travelers maximize their rewards.</p>
+    <main>
+      <AboutHero />
+      <AboutStory />
+      <AboutTeam />
+      <CTASection />
+      <AboutBenefits />
+      <Footer />
     </main>
   )
 } 
