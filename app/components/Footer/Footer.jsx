@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react"
-import { Button } from "../ui/Button"
+import { Button } from "../ui/button"
 
 const OutlinedGradientButton = ({ href, children, type, disabled }) => {
   const style = {

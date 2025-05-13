@@ -1,10 +1,14 @@
 "use client"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { Button } from "./ui/Button"
+import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
 
-const CategoryTag = ({ children }) => {
+interface CategoryTagProps {
+  children: React.ReactNode
+}
+
+const CategoryTag = ({ children }: CategoryTagProps) => {
   return (
     <div className="px-2.5 py-1 bg-transparent rounded-md outline outline-1 outline-stone-950/20 flex justify-start items-start">
       <div className="text-stone-950 text-sm font-bold font-['Inter'] leading-tight">{children}</div>
@@ -12,8 +16,20 @@ const CategoryTag = ({ children }) => {
   )
 }
 
+interface BlogPostProps {
+  post: {
+    id: number
+    title: string
+    summary: string
+    category: string
+    readTime: string
+    image: string
+    slug: string
+  }
+}
+
 // Update the BlogPost component to make the entire card clickable with hover effect
-const BlogPost = ({ post }) => {
+const BlogPost = ({ post }: BlogPostProps) => {
   const { title, summary, category, readTime, image, slug } = post
   const router = useRouter()
 
@@ -58,7 +74,12 @@ const BlogPost = ({ post }) => {
   )
 }
 
-const OutlinedGradientButton = ({ href, children }) => {
+interface OutlinedGradientButtonProps {
+  href?: string
+  children: React.ReactNode
+}
+
+const OutlinedGradientButton = ({ href, children }: OutlinedGradientButtonProps) => {
   const style = {
     background: "white",
     border: "2px solid transparent",
@@ -94,15 +115,32 @@ const OutlinedGradientButton = ({ href, children }) => {
   return buttonContent
 }
 
+export interface BlogPost {
+  id: number
+  title: string
+  summary: string
+  category: string
+  readTime: string
+  image: string
+  slug: string
+}
+
+export interface BlogShowcaseProps {
+  title?: string
+  subtitle?: string
+  posts?: BlogPost[]
+  className?: string
+}
+
 // Update the BlogShowcase component
-const BlogShowcase = ({
+const BlogShowcase: React.FC<BlogShowcaseProps> = ({
   title = "Explore Our Latest Insights",
   subtitle = "Discover tips and tricks for savvy travelers.",
   posts = [],
   className = "",
 }) => {
   // Default blog posts if none are provided
-  const defaultPosts = [
+  const defaultPosts: BlogPost[] = [
     {
       id: 1,
       title: "Maximize Your Airline Points",
@@ -182,4 +220,4 @@ const BlogShowcase = ({
   )
 }
 
-export default BlogShowcase
+export default BlogShowcase 

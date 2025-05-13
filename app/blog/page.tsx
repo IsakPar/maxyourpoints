@@ -1,12 +1,24 @@
 "use client"
 
-import type React from "react"
+import * as React from "react"
 import BlogShowcase from "../../components/BlogShowcase"
 import Navbar from "../../components/Navbar/Navbar"
 import { ChevronRight } from "lucide-react"
-import Button from "../../components/ui/Button"
+import { Button } from "../../components/ui/button"
 import { useRouter } from "next/navigation"
 import CTASection from "../../components/CTASection/CTASection"
+
+interface BlogPost {
+  id: number
+  title: string
+  summary: string
+  category: string
+  readTime: string
+  image: string
+  slug: string
+  author: string
+  date: string
+}
 
 const CategoryTag = ({ children }: { children: React.ReactNode }) => {
   return <span className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 text-sm font-medium">{children}</span>
@@ -16,7 +28,7 @@ export default function BlogPage() {
   const router = useRouter()
 
   // Sample blog posts data - in a real app, this would come from an API or CMS
-  const blogPosts = [
+  const blogPosts: BlogPost[] = [
     {
       id: 1,
       title: "Maximize Your Airline Points",
@@ -115,12 +127,12 @@ export default function BlogPage() {
     },
   ]
 
-  const handleCardClick = (slug) => {
+  const handleCardClick = (slug: string): void => {
     router.push(slug)
   }
 
   // Custom subscribe handler for the blog page
-  const handleSubscribe = async (email) => {
+  const handleSubscribe = async (email: string): Promise<void> => {
     // In a real implementation, you would make an API call to your backend
     console.log(`Blog page subscription with email: ${email}`)
   }
@@ -150,7 +162,7 @@ export default function BlogPage() {
             <h2 className="text-2xl md:text-3xl font-bold">More Articles</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {blogPosts.slice(4).map((post) => (
+              {blogPosts.slice(4).map((post: BlogPost) => (
                 <div
                   key={post.id}
                   className="flex flex-col gap-4 bg-white rounded-lg overflow-hidden transition-all duration-300 hover:shadow-elevation cursor-pointer"

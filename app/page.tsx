@@ -1,9 +1,16 @@
-"use client";
-import dynamic from "next/dynamic"
+"use client"
 
-// Use dynamic import with no SSR to avoid hydration issues
-const App = dynamic(() => import("./App"), { ssr: false })
+import HomePage from "./pages/HomePage"
+import Navbar from "./components/Navbar/Navbar"
 
 export default function Home() {
-  return <App />
+  return (
+    <div className="app">
+      <Navbar />
+      <div className="pt-16">
+        {/* Add padding top to account for fixed navbar */}
+        <HomePage />
+      </div>
+    </div>
+  )
 }

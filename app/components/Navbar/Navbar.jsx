@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import ButtonCustom from "../ui/ButtonCustom"
@@ -233,40 +233,82 @@ const NavLink = ({ href, children }) => (
 )
 
 const NavDropdown = ({ title, items }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // Get the base route from the first item's href
+  const baseRoute = items[0]?.href.split('/')[1] || ''
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   return (
-    <div className="relative group">
-      <div className="flex items-center gap-1 cursor-pointer">
-        <span className="text-stone-950 text-sm font-medium font-['Inter'] leading-normal group-hover:text-orange-500 transition-colors">
+    <div className="relative group" ref={dropdownRef}>
+      <div 
+        className="flex items-center gap-1 cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setIsOpen(!isOpen)
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <Link 
+          href={`/blog/${baseRoute}`}
+          className="text-stone-950 text-sm font-medium font-['Inter'] leading-normal group-hover:text-orange-500 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
           {title}
-        </span>
+        </Link>
         <svg
           width="20"
           height="20"
           viewBox="0 0 25 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="transition-transform duration-200 group-hover:rotate-180"
+          className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          aria-hidden="true"
         >
           <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M12.8977 15.6629C12.678 15.8826 12.3219 15.8826 12.1022 15.6629L6.36739 9.92804C6.14772 9.70837 6.14772 9.35227 6.36739 9.13259L6.63256 8.86739C6.85222 8.64772 7.20838 8.64772 7.42805 8.86739L12.5 13.9393L17.5719 8.86739C17.7916 8.64772 18.1477 8.64772 18.3674 8.86739L18.6326 9.13259C18.8522 9.35227 18.8522 9.70837 18.6326 9.92804L12.8977 15.6629Z"
-            fill="#0D0500"
-            className="group-hover:fill-orange-500"
+            d="M6.5 9L12.5 15L18.5 9"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       </div>
-      {/* Dropdown menu */}
-      <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        {items.map((item, index) => (
-          <Link
-            key={index}
-            href={item.href}
-            className="block px-4 py-2 text-xs text-gray-700 hover:bg-emerald-50 hover:text-orange-500"
-          >
-            {item.label}
-          </Link>
-        ))}
+      <div
+        className={`absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-200 ${
+          isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+      >
+        <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+          {items.map((item, index) => (
+            <Link
+              key={index}
+              href={`/blog/${baseRoute}`}
+              className="block px-4 py-2 text-sm text-stone-950 hover:bg-orange-50 hover:text-orange-500 transition-colors"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )
