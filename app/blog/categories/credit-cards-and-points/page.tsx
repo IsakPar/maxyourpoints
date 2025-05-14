@@ -1,12 +1,35 @@
 "use client"
 
 import * as React from "react"
+import { posts } from "@/lib/posts"
+import CTASection from "@/components/CTASection/CTASection"
+import CategoryHero from "@/components/blog/CategoryHero"
+import FeaturedPosts from "@/components/blog/FeaturedPosts"
+import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
 
-export default function CreditCardsPointsPage() {
+export default function CreditCardsPage() {
+  // Filter posts for this category
+  const creditCardPosts = posts.filter(
+    (post) => post.category === "Credit Cards & Points"
+  )
+
+  // Get featured posts (first 3)
+  const featuredPosts = creditCardPosts.slice(0, 3)
+
+  // Get remaining posts for the grid
+  const gridPosts = creditCardPosts.slice(3)
+
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-6">Credit Cards & Points</h1>
-      <p className="text-lg">Learn about credit card rewards, points strategies, and maximizing your earnings.</p>
+    <main>
+      <CategoryHero
+        title="Master Your Credit Card Rewards"
+        subtitle="Discover how to maximize your credit card rewards and points, from choosing the right cards to strategic spending and redemption strategies."
+      />
+      <FeaturedPosts posts={featuredPosts} />
+      <FilteredBlogGrid posts={gridPosts} />
+      <div className="bg-teal-50">
+        <CTASection />
+      </div>
     </main>
   )
 } 

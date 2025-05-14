@@ -1,36 +1,45 @@
 "use client"
 
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import { CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { GradientButton } from "@/components/ui/gradient-button"
 
-type DesignType = "gradient-teal" | "gradient-orange" | "pattern-dots" | "pattern-lines" | "overlay-teal"
+type DesignType = 'gradient-teal' | 'gradient-orange' | 'pattern-dots' | 'pattern-lines' | 'overlay-teal'
 
 interface CTASectionProps {
   title?: string
   description?: string
   buttonText?: string
+  buttonVariant?: 'primary' | 'secondary'
   className?: string
   withSubscribeForm?: boolean
-  onSubscribe?: (email: string) => Promise<void>
-  redirectUrl?: string
+  onSubscribe?: ((email: string) => Promise<void>) | null
+  redirectUrl?: string | null
   design?: DesignType
+}
+
+interface CustomButtonProps {
+  href?: string
+  children: React.ReactNode
+  type?: 'button' | 'submit' | 'reset'
+  disabled?: boolean
 }
 
 const CTASection = ({
   title = "Stay Updated with Our Insights",
   description = "Subscribe to our newsletter for exclusive travel tips and the latest updates in travel rewards.",
   buttonText = "Subscribe",
+  buttonVariant = "primary",
   className = "",
   withSubscribeForm = true,
-  onSubscribe = undefined,
-  redirectUrl = undefined,
+  onSubscribe = null,
+  redirectUrl = null,
   design = "gradient-teal",
 }: CTASectionProps) => {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null)
+  const [submitStatus, setSubmitStatus] = useState<null | 'success' | 'error'>(null)
   const [errorMessage, setErrorMessage] = useState("")
   const [isHovered, setIsHovered] = useState(false)
 
@@ -73,9 +82,46 @@ const CTASection = ({
       description: "text-teal-100",
       input: "bg-white/20 border-teal-400/30 text-white placeholder-teal-100/70 focus:border-white",
     },
-  } as const
+  }
 
   const currentDesign = designStyles[design] || designStyles["gradient-teal"]
+
+  // Custom button with inline styles for precise gradient control
+  const CustomButton = ({ href, children, type, disabled }: CustomButtonProps) => {
+    const style = {
+      background: "linear-gradient(to right, #2DD4BF, #EAB308, #EA580C)",
+      backgroundSize: "200% 100%",
+      backgroundPosition: "0% 50%",
+      transition: "background-position 0.5s ease",
+    }
+
+    const buttonContent = (
+      <button
+        type={type}
+        disabled={disabled}
+        className="px-5 py-2.5 text-base font-medium font-['Inter'] rounded-xl shadow-md text-white disabled:opacity-70 disabled:cursor-not-allowed"
+        style={style}
+        onMouseOver={(e) => {
+          e.currentTarget.style.backgroundPosition = "100% 50%"
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.backgroundPosition = "0% 50%"
+        }}
+      >
+        {children}
+      </button>
+    )
+
+    if (href) {
+      return (
+        <Link href={href} className="inline-block">
+          {buttonContent}
+        </Link>
+      )
+    }
+
+    return buttonContent
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -171,36 +217,20 @@ const CTASection = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className={`flex-grow px-4 py-3 rounded-lg border ${currentDesign.input} focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                      required
+                      className={`flex-grow px-4 py-3 rounded-xl border ${currentDesign.input} focus:outline-none focus:ring-2 focus:ring-teal-500`}
                     />
-                    <GradientButton
-                      type="submit"
-                      disabled={isSubmitting}
-                    >
+                    <CustomButton type="submit" disabled={isSubmitting}>
                       {isSubmitting ? "Subscribing..." : buttonText}
-                    </GradientButton>
+                    </CustomButton>
                   </div>
-
-                  <p
-                    className={`text-xs ${design.includes("overlay") ? "text-teal-100/70" : "text-gray-500"} text-center sm:text-left`}
-                  >
-                    We respect your privacy. Unsubscribe at any time.
-                  </p>
                 </div>
               </form>
             </div>
           ) : (
-            <div className="inline-flex justify-start items-start">
-              {redirectUrl ? (
-                <GradientButton href={redirectUrl}>
-                  {buttonText}
-                </GradientButton>
-              ) : (
-                <GradientButton>
-                  {buttonText}
-                </GradientButton>
-              )}
+            <div className="w-full md:w-1/2 flex justify-center md:justify-end">
+              <CustomButton href={redirectUrl || "/subscribe"}>
+                {buttonText}
+              </CustomButton>
             </div>
           )}
         </div>

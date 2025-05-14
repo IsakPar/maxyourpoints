@@ -87,7 +87,7 @@ const OutlinedGradientButton = ({ href, children }: OutlinedGradientButtonProps)
 
   const buttonContent = (
     <button
-      className="px-5 py-2.5 text-base font-medium font-['Inter'] rounded-lg text-stone-950 hover:text-orange-500"
+      className="px-5 py-2.5 text-base font-medium font-['Inter'] rounded-xl text-stone-950 hover:text-orange-500"
       style={style}
       onMouseOver={(e) => {
         e.currentTarget.style.backgroundImage = "linear-gradient(white, white), linear-gradient(to right, #EA580C, #EAB308, #2DD4BF)"

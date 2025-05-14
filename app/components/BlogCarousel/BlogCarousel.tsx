@@ -4,9 +4,41 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import PropTypes from "prop-types"
 
-const OutlinedGradientButton = ({ href, children }) => {
+interface BlogPost {
+  id: number
+  title: string
+  excerpt: string
+  category: string
+  readTime: string
+  image: string
+  slug: string
+  date: string
+}
+
+interface PostsPerView {
+  mobile: number
+  tablet: number
+  desktop: number
+}
+
+interface OutlinedGradientButtonProps {
+  href?: string
+  children: React.ReactNode
+}
+
+interface BlogCarouselProps {
+  title?: string
+  subtitle?: string
+  posts?: BlogPost[]
+  postsPerView?: PostsPerView
+  className?: string
+  autoplay?: boolean
+  autoplayDelay?: number
+  theme?: 'light' | 'dark' | 'teal'
+}
+
+const OutlinedGradientButton = ({ href, children }: OutlinedGradientButtonProps) => {
   const style = {
     background: "white",
     border: "2px solid transparent",
@@ -50,19 +82,19 @@ const BlogCarousel = ({
   className = "",
   autoplay = false,
   autoplayDelay = 5000,
-  theme = "light", // 'light', 'dark', 'teal'
-}) => {
+  theme = "light",
+}: BlogCarouselProps) => {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const carouselRef = useRef(null)
-  const autoplayTimerRef = useRef(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Default blog posts if none are provided
-  const defaultPosts = [
+  const defaultPosts: BlogPost[] = [
     {
       id: 1,
       title: "Maximize Your Airline Points",
@@ -202,194 +234,138 @@ const BlogCarousel = ({
         clearInterval(autoplayTimerRef.current)
       }
     }
-  }, [currentIndex, autoplay, autoplayDelay])
+  }, [autoplay, autoplayDelay])
 
-  // Navigation functions
   const handlePrev = () => {
-    setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : blogPosts.length - getPostsPerView()))
+    setCurrentIndex((prev) => (prev === 0 ? blogPosts.length - getPostsPerView() : prev - 1))
   }
 
   const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex < blogPosts.length - getPostsPerView() ? prevIndex + 1 : 0))
+    setCurrentIndex((prev) => (prev >= blogPosts.length - getPostsPerView() ? 0 : prev + 1))
   }
 
-  const handleDotClick = (index) => {
+  const handleDotClick = (index: number) => {
     setCurrentIndex(index)
   }
 
-  // Touch handlers for swipe gestures
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX)
   }
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX)
   }
 
   const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      // Swipe left
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
       handleNext()
     }
-
-    if (touchEnd - touchStart > 75) {
-      // Swipe right
+    if (isRightSwipe) {
       handlePrev()
     }
   }
 
-  // Handle card click to navigate to blog post
-  const handleCardClick = (slug) => {
+  const handleCardClick = (slug: string) => {
     router.push(slug)
   }
 
-  // Calculate visible posts
-  const visiblePosts = blogPosts.slice(currentIndex, currentIndex + getPostsPerView())
-
-  // If we don't have enough posts to fill the view, add from the beginning
-  if (visiblePosts.length < getPostsPerView()) {
-    const additionalPosts = blogPosts.slice(0, getPostsPerView() - visiblePosts.length)
-    visiblePosts.push(...additionalPosts)
-  }
-
   return (
-    <section
-      className={`w-full max-w-[1440px] px-4 md:px-16 py-12 md:py-20 flex flex-col justify-start items-center gap-8 overflow-hidden ${className}`}
-    >
-      <div className="w-full flex flex-col justify-start items-center gap-4 text-center">
-        <h2 className={`text-2xl md:text-4xl font-bold ${currentTheme.title}`}>{title}</h2>
-        <p className={`text-base md:text-lg ${currentTheme.subtitle} max-w-2xl`}>{subtitle}</p>
-      </div>
+    <section className={`w-full max-w-[1440px] px-4 md:px-16 py-12 md:py-20 ${currentTheme.container} ${className}`}>
+      <div className="flex flex-col gap-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className={`text-2xl md:text-3xl font-bold ${currentTheme.title}`}>{title}</h2>
+            <p className={`mt-2 text-base md:text-lg ${currentTheme.subtitle}`}>{subtitle}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrev}
+              className={`p-2 rounded-full ${currentTheme.nav} transition-colors`}
+              aria-label="Previous slide"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={handleNext}
+              className={`p-2 rounded-full ${currentTheme.nav} transition-colors`}
+              aria-label="Next slide"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
 
-      <div className="w-full relative">
-        {/* Carousel container */}
+        {/* Carousel */}
         <div
           ref={carouselRef}
-          className="w-full overflow-hidden"
+          className="relative overflow-hidden"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className="flex transition-transform duration-500 ease-in-out gap-6"
-            style={{
-              transform: `translateX(calc(-${100 / getPostsPerView()}% * ${currentIndex}))`,
-            }}
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${currentIndex * (100 / getPostsPerView())}%)` }}
           >
             {blogPosts.map((post) => (
               <div
                 key={post.id}
-                className={`flex-shrink-0 w-full md:w-1/2 lg:w-1/3 p-3 transition-transform duration-300 hover:scale-[1.02] cursor-pointer`}
+                className={`flex-none w-full sm:w-1/2 lg:w-1/3 p-4 transition-all duration-300`}
                 style={{ width: `${100 / getPostsPerView()}%` }}
-                onClick={() => handleCardClick(post.slug)}
               >
-                <div className={`h-full ${currentTheme.card} rounded-lg overflow-hidden shadow-md flex flex-col`}>
-                  <div className="relative h-48 overflow-hidden">
+                <article
+                  className={`h-full ${currentTheme.card} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer`}
+                  onClick={() => handleCardClick(post.slug)}
+                >
+                  <div className="aspect-[16/9] relative">
                     <img
-                      src={post.image || "/placeholder.svg"}
+                      src={post.image}
                       alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${currentTheme.category}`}>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${currentTheme.category}`}>
                         {post.category}
                       </span>
+                      <span className={`text-sm ${currentTheme.date}`}>{post.readTime}</span>
+                    </div>
+                    <h3 className={`text-xl font-semibold mb-3 ${currentTheme.title}`}>{post.title}</h3>
+                    <p className={`text-base ${currentTheme.excerpt} mb-4`}>{post.excerpt}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${currentTheme.date}`}>{post.date}</span>
+                      <OutlinedGradientButton href={post.slug}>Read More</OutlinedGradientButton>
                     </div>
                   </div>
-
-                  <div className="p-5 flex flex-col gap-3 flex-grow">
-                    <div className="flex justify-between items-center">
-                      <span className={`text-xs ${currentTheme.date}`}>{post.date}</span>
-                      <span className={`text-xs ${currentTheme.date}`}>{post.readTime}</span>
-                    </div>
-
-                    <h3 className={`text-xl font-bold ${currentTheme.title} line-clamp-2`}>{post.title}</h3>
-
-                    <p className={`text-sm ${currentTheme.excerpt} line-clamp-3 flex-grow`}>{post.excerpt}</p>
-
-                    <Link
-                      href={post.slug}
-                      className={`inline-flex items-center ${currentTheme.button} font-medium text-sm mt-2`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Read More
-                      <svg
-                        className="ml-2 w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
+                </article>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Navigation arrows below carousel */}
-        <div className="flex justify-center items-center gap-6 mt-6">
-          <button
-            onClick={handlePrev}
-            className={`p-2 rounded-full shadow-md ${currentTheme.nav} flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
-            aria-label="Previous posts"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            onClick={handleNext}
-            className={`p-2 rounded-full shadow-md ${currentTheme.nav} flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
-            aria-label="Next posts"
-          >
-            <ChevronRight size={24} />
-          </button>
+        {/* Dots Navigation */}
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: blogPosts.length - getPostsPerView() + 1 }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleDotClick(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                currentIndex === index ? currentTheme.activeDot : currentTheme.dots
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
-
-        {/* Pagination dots */}
-        <div className="flex justify-center mt-6 gap-2">
-          {Array.from({ length: Math.min(blogPosts.length, blogPosts.length - getPostsPerView() + 1) }).map(
-            (_, index) => (
-              <button
-                key={index}
-                onClick={() => handleDotClick(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  index === currentIndex ? `w-6 ${currentTheme.activeDot}` : currentTheme.dots
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ),
-          )}
-        </div>
-      </div>
-
-      {/* View All Button */}
-      <div className="flex justify-center mt-8">
-        <Link href="/blog" className="inline-block">
-          <OutlinedGradientButton>
-            View all
-          </OutlinedGradientButton>
-        </Link>
       </div>
     </section>
   )
 }
 
-BlogCarousel.propTypes = {
-  title: PropTypes.string,
-  subtitle: PropTypes.string,
-  posts: PropTypes.array,
-  postsPerView: PropTypes.shape({
-    mobile: PropTypes.number,
-    tablet: PropTypes.number,
-    desktop: PropTypes.number,
-  }),
-  className: PropTypes.string,
-  autoplay: PropTypes.bool,
-  autoplayDelay: PropTypes.number,
-  theme: PropTypes.oneOf(["light", "dark", "teal"]),
-}
-
-export default BlogCarousel
+export default BlogCarousel 

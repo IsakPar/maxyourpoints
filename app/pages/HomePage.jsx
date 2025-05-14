@@ -1,10 +1,11 @@
 "use client"
 
-import CTASection from "../components/CTASection/CTASection"
-import Footer from "../components/Footer/Footer"
-import Header from "../components/Header"
-import BlogShowcase from "../components/BlogShowcase"
-import BlogCarousel from "../components/BlogCarousel/BlogCarousel"
+import React from "react"
+import CTASection from "@/components/CTASection/CTASection"
+import Footer from "@/components/Footer/Footer"
+import Header from "@/components/Header"
+import BlogShowcase from "@/components/BlogShowcase"
+import BlogCarousel from "@/components/BlogCarousel/BlogCarousel"
 
 export default function HomePage() {
   return (

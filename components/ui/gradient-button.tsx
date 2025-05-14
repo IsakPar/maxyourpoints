@@ -20,7 +20,7 @@ const GradientButton = React.forwardRef<HTMLButtonElement, GradientButtonProps>(
     const buttonContent = (
       <button
         ref={ref}
-        className={`px-5 py-2.5 text-base font-medium font-['Inter'] rounded-lg shadow-md text-white disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
+        className={`px-5 py-2.5 text-base font-medium font-['Inter'] rounded-xl shadow-md text-white disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
         style={style}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundPosition = "100% 50%"

@@ -3,11 +3,10 @@
 import * as React from "react"
 import { posts, type BlogPost } from "@/lib/posts"
 import CTASection from "@/components/CTASection/CTASection"
-import Footer from "@/components/Footer/Footer"
 
 export default function AirlineAndAviationPage() {
   // Filter posts for airline category
-  const airlinePosts = posts.filter((post: BlogPost) => post.category === "Airline")
+  const airlinePosts = posts.filter((post: BlogPost) => post.category === "Airlines & Aviation")
 
   // Get featured posts (first 2)
   const featuredPosts = airlinePosts.slice(0, 2)
@@ -151,9 +150,6 @@ export default function AirlineAndAviationPage() {
 
       {/* CTA Section */}
       <CTASection />
-
-      {/* Footer */}
-      <Footer />
     </main>
   )
 } 

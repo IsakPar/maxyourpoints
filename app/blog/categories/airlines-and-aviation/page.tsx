@@ -7,23 +7,23 @@ import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
 import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
 
-export default function HotelsPage() {
+export default function AirlinesPage() {
   // Filter posts for this category
-  const hotelPosts = posts.filter(
-    (post) => post.category === "Hotels & Trip Reports"
+  const airlinePosts = posts.filter(
+    (post) => post.category === "Airlines & Aviation"
   )
 
   // Get featured posts (first 3)
-  const featuredPosts = hotelPosts.slice(0, 3)
+  const featuredPosts = airlinePosts.slice(0, 3)
 
   // Get remaining posts for the grid
-  const gridPosts = hotelPosts.slice(3)
+  const gridPosts = airlinePosts.slice(3)
 
   return (
     <main>
       <CategoryHero
-        title="Hotels & Trip Reports"
-        subtitle="Luxury, boutique, and budget — plus firsthand travel stories from around the world."
+        title="Explore Airlines & Aviation"
+        subtitle="Discover loyalty programs, elite strategies, and the future of flight with our in-depth aviation coverage."
       />
       <FeaturedPosts posts={featuredPosts} />
       <FilteredBlogGrid posts={gridPosts} />

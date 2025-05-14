@@ -17,7 +17,7 @@ const ButtonCustom: React.FC<ButtonCustomProps> = ({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 disabled:pointer-events-none disabled:opacity-50",
         {
           "bg-stone-900 text-white hover:bg-stone-800": variant === "default",
           "border border-stone-200 bg-white text-stone-900 hover:bg-gray-50": variant === "outline",

@@ -1,12 +1,12 @@
 "use client"
 
-import * as React from "react"
-import AboutHero from "@/app/about/AboutHero"
-import AboutStory from "@/app/about/AboutStory"
-import { AboutTeam } from "@/app/about/AboutTeam"
-import { AboutBenefits } from "@/app/about/AboutBenefits"
-import Footer from "@/app/components/Footer/Footer"
-import CTASection from "@/app/components/CTASection/CTASection"
+import React from "react"
+import AboutHero from "./AboutHero"
+import AboutStory from "./AboutStory"
+import { AboutTeam } from "./AboutTeam"
+import Footer from "@/components/Footer/Footer"
+import CTASection from "@/components/CTASection/CTASection"
+import { AboutBenefits } from "./AboutBenefits"
 
 export default function Page() {
   return (
@@ -14,9 +14,10 @@ export default function Page() {
       <AboutHero />
       <AboutStory />
       <AboutTeam />
-      <CTASection />
+      <div className="bg-teal-50">
+        <CTASection />
+      </div>
       <AboutBenefits />
-      <Footer />
     </main>
   )
 } 

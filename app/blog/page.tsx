@@ -1,18 +1,68 @@
 "use client"
 
-import * as React from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { posts, type BlogPost } from "@/lib/posts"
-import CTASection from "../components/CTASection/CTASection"
-import Footer from "@/components/Footer/Footer"
+import CTASection from "@/components/CTASection/CTASection"
+import { categories } from "@/lib/categories"
+import { client } from "@/lib/sanity"
+import { Search } from "lucide-react"
+
+interface SearchResult {
+  title: string
+  slug: {
+    current: string
+  }
+  summary: string
+  tags: string[]
+}
 
 export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = React.useState("View All")
+  const [activeCategory, setActiveCategory] = useState("View All")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
-  const categories = ["View All", "Airline Tips", "Credit Card", "Hotel Reviews", "Travel Hacks"]
+  const categoryLabels = ["View All", ...categories.map(cat => cat.label)]
 
   const filteredPosts = activeCategory === "View All" 
     ? posts 
     : posts.filter(post => post.category === activeCategory)
+
+  const debouncedSearch = useCallback(
+    debounce(async (term: string) => {
+      if (!term.trim()) {
+        setSearchResults([])
+        return
+      }
+
+      setIsSearching(true)
+      try {
+        const results = await client.fetch<SearchResult[]>(
+          `*[_type == "post" && $term in tags] {
+            title,
+            slug,
+            summary,
+            tags
+          }`,
+          { term }
+        )
+        setSearchResults(results)
+      } catch (error) {
+        console.error("Search error:", error)
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300),
+    []
+  )
+
+  useEffect(() => {
+    debouncedSearch(searchTerm)
+  }, [searchTerm, debouncedSearch])
 
   return (
     <main>
@@ -61,7 +111,7 @@ export default function BlogPage() {
 
           {/* Category Filters */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {categories.map((category) => (
+            {categoryLabels.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
@@ -118,7 +168,78 @@ export default function BlogPage() {
       </section>
 
       {/* CTA Section */}
-      <CTASection />
+      <div className="bg-teal-50">
+        <CTASection />
+      </div>
+
+      {/* Search Section */}
+      <section className="bg-white py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-900 mb-4">
+              Search by Tags
+            </h2>
+            <p className="text-lg text-stone-700">
+              Find posts by searching for specific tags.
+            </p>
+          </div>
+
+          {/* Search Input */}
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by tags..."
+                className="w-full px-4 py-3 pl-12 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {isSearching ? (
+            <div className="text-center text-gray-600">Searching...</div>
+          ) : searchResults.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {searchResults.map((result) => (
+                <article
+                  key={result.slug.current}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                >
+                  <div className="p-6">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {result.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h2 className="text-xl font-semibold mb-3 hover:text-emerald-600 transition-colors">
+                      {result.title}
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                      {result.summary}
+                    </p>
+                    <Link
+                      href={`/blog/${result.slug.current}`}
+                      className="text-emerald-600 hover:text-emerald-700 font-medium"
+                    >
+                      Read more →
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : searchTerm ? (
+            <div className="text-center text-gray-600">No results found</div>
+          ) : null}
+        </div>
+      </section>
 
       {/* Additional Blog Posts Section */}
       <section className="bg-white py-24">
@@ -165,9 +286,24 @@ export default function BlogPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
     </main>
   )
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout
+
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
 }
