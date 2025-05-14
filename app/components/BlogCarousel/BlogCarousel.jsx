@@ -262,23 +262,6 @@ const BlogCarousel = ({
       </div>
 
       <div className="w-full relative">
-        {/* Navigation arrows */}
-        <button
-          onClick={handlePrev}
-          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 p-2 rounded-full shadow-md ${currentTheme.nav} md:flex hidden items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
-          aria-label="Previous posts"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
-        <button
-          onClick={handleNext}
-          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 p-2 rounded-full shadow-md ${currentTheme.nav} md:flex hidden items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
-          aria-label="Next posts"
-        >
-          <ChevronRight size={24} />
-        </button>
-
         {/* Carousel container */}
         <div
           ref={carouselRef}
@@ -288,7 +271,7 @@ const BlogCarousel = ({
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className="flex transition-transform duration-500 ease-in-out"
+            className="flex transition-transform duration-500 ease-in-out gap-6"
             style={{
               transform: `translateX(calc(-${100 / getPostsPerView()}% * ${currentIndex}))`,
             }}
@@ -345,6 +328,24 @@ const BlogCarousel = ({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Navigation arrows below carousel */}
+        <div className="flex justify-center items-center gap-6 mt-6">
+          <button
+            onClick={handlePrev}
+            className={`p-2 rounded-full shadow-md ${currentTheme.nav} flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
+            aria-label="Previous posts"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={handleNext}
+            className={`p-2 rounded-full shadow-md ${currentTheme.nav} flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50`}
+            aria-label="Next posts"
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
 
         {/* Pagination dots */}

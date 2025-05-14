@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { posts, type BlogPost } from "@/lib/posts"
-import CTASection from "../../components/CTASection/CTASection"
-import Footer from "../../components/Footer/Footer"
+import CTASection from "@/components/CTASection/CTASection"
+import Footer from "@/components/Footer/Footer"
 
 export default function AirlineAndAviationPage() {
   // Filter posts for airline category

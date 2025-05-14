@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { Button } from "./ui/Button"
+import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
 
 interface CategoryTagProps {

@@ -4,7 +4,7 @@ import * as React from "react"
 
 export default function AboutHero() {
   return (
-    <section className="w-full max-w-screen-xl mx-auto bg-[#D1F1EB] px-6 md:px-16 pt-36 pb-28">
+    <section className="w-full bg-[#D1F1EB] px-4 md:px-8 pt-36 pb-28">
       <div className="flex flex-col md:flex-row items-center gap-12">
         <div className="flex-1">
           <h1 className="text-4xl sm:text-5xl font-bold text-stone-950">

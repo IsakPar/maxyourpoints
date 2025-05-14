@@ -3,7 +3,7 @@
 import * as React from "react"
 import { posts, type BlogPost } from "@/lib/posts"
 import CTASection from "../components/CTASection/CTASection"
-import Footer from "../components/Footer/Footer"
+import Footer from "@/components/Footer/Footer"
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = React.useState("View All")
@@ -20,21 +20,27 @@ export default function BlogPage() {
       <section className="bg-[#D1F1EB] py-24">
         <div className="max-w-screen-xl mx-auto px-6 md:px-16">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
-            {/* Left Column - Text Content */}
-            <div className="flex-1 space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold text-stone-900">
+            {/* Left Column - H1 Heading */}
+            <div className="flex-1 w-full">
+              <h1 className="text-4xl md:text-5xl font-bold text-stone-900 mb-6">
                 Unlock Your Travel Potential with Expert Insights
               </h1>
+            </div>
+            {/* Right Column - Text Content */}
+            <div className="flex-1 space-y-6">
               <p className="text-lg text-stone-700">
                 Welcome to our blog, where we empower travelers with valuable tips and insights across various categories. Discover the latest in airline news, credit card rewards, hotel reviews, and travel hacks to maximize your adventures.
               </p>
             </div>
-
-            {/* Right Column - Image Placeholder */}
-            <div className="flex-1">
-              <div className="aspect-[4/3] bg-gray-200 rounded-2xl flex items-center justify-center">
-                <span className="text-gray-500 font-medium">Hero Image</span>
-              </div>
+          </div>
+          {/* Full-width image below columns */}
+          <div className="w-full mt-12">
+            <div className="aspect-[16/5] bg-gray-200 rounded-2xl overflow-hidden flex items-center justify-center">
+              <img
+                src="/world-flight-paths.png"
+                alt="World flight paths illustration"
+                className="object-cover w-full h-full" style={{ objectPosition: 'center 60%' }}
+              />
             </div>
           </div>
         </div>
