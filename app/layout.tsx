@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar/Navbar"
 import Footer from "@/app/components/Footer/Footer"
 import { CookieConsentBanner } from "@/components/CookieConsentBanner"
 import Script from "next/script"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -69,6 +70,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <CookieConsentBanner />
+        <SpeedInsights />
       </body>
     </html>
   )
