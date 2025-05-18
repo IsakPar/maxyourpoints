@@ -24,6 +24,8 @@ export default function TravelHacksPage() {
       <CategoryHero
         title="Travel Hacks & Deals"
         subtitle="Get the most out of your trips with insider tips, tricks, and timely deals you don't want to miss."
+        imageSrc="/images/marius-kriz-DH5eyHWPT50-unsplash.jpg"
+        imageAlt="Tropical island with sign here is koh samui"
       />
       <FeaturedPosts posts={featuredPosts} />
       <FilteredBlogGrid posts={gridPosts} />

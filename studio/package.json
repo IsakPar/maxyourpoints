@@ -1,0 +1,23 @@
+{
+  "name": "studio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "start": "sanity start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "@sanity/cli": "^3.88.3",
+    "@sanity/vision": "^3.88.3",
+    "sanity": "^3.88.3"
+  },
+  "dependencies": {
+    "styled-components": "^6.1.18"
+  }
+}

@@ -1,25 +1,32 @@
-export default {
-  name: "category",
-  title: "Category",
-  type: "document",
+import { defineType, defineField } from 'sanity'
+
+export const category = defineType({
+  name: 'category',
+  title: 'Category',
+  type: 'document',
   fields: [
-    {
-      name: "title",
-      type: "string",
-      title: "Title",
-    },
-    {
-      name: "slug",
-      type: "slug",
-      title: "Slug",
-      options: {
-        source: "title",
-      },
-    },
-    {
-      name: "description",
-      type: "text",
-      title: "Description",
-    },
+    defineField({
+      name: 'title',
+      title: 'Category Title',
+      type: 'string',
+      validation: Rule => Rule.required()
+    }),
+    defineField({
+      name: 'description',
+      title: 'Category Description',
+      type: 'text'
+    }),
+    defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'title', maxLength: 96 },
+      validation: Rule => Rule.required()
+    })
   ],
-} 
+  preview: {
+    select: {
+      title: 'title'
+    }
+  }
+}) 

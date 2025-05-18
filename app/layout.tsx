@@ -7,6 +7,7 @@ import { CookieConsentBanner } from "@/components/CookieConsentBanner"
 import Script from "next/script"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -73,6 +74,7 @@ export default function RootLayout({
         <CookieConsentBanner />
         <SpeedInsights />
         <Analytics />
+        <Toaster position="bottom-right" />
       </body>
     </html>
   )

@@ -7,12 +7,12 @@ export function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(true); // Still true for testing
 
   useEffect(() => {
-    console.log('Cookie banner mounted, isVisible:', isVisible);
-    // Temporarily commented out localStorage check for testing
-    // const hasConsent = localStorage.getItem('cookieConsent');
-    // if (!hasConsent) {
-    //   setIsVisible(true);
-    // }
+    const hasConsent = localStorage.getItem('cookieConsent');
+    if (hasConsent) {
+      setIsVisible(false);
+    } else {
+      setIsVisible(true);
+    }
   }, []);
 
   const handleAccept = () => {
@@ -23,7 +23,7 @@ export function CookieConsentBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#FF7F50]/95 backdrop-blur-sm z-[9999] border-t border-[#FF7F50]/20">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#FF7F50]/95 backdrop-blur-sm z-40 border-t border-[#FF7F50]/20 pointer-events-auto">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex-1">

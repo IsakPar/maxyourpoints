@@ -25,8 +25,8 @@ export function AboutTeam() {
   ]
 
   return (
-    <section className="py-24 bg-emerald-50">
-      <div className="container mx-auto px-6 md:px-16">
+    <section className="w-full bg-emerald-50">
+      <div className="max-w-screen-xl mx-auto px-6 md:px-16 py-24">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Left Column */}
           <div className="lg:w-1/3">

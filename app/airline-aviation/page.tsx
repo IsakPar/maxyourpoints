@@ -19,6 +19,10 @@ export default function AirlinesAviationPage() {
     deals: {
       title: "Flight Deals",
       content: "Find the best flight deals, promotions, and special offers from airlines around the world."
+    },
+    guides: {
+      title: "Aviation Guides",
+      content: "Expert guides on airline loyalty programs, booking strategies, and maximizing your travel experience."
     }
   }
 
@@ -28,7 +32,7 @@ export default function AirlinesAviationPage() {
         <h1 className="text-4xl font-bold text-stone-950 mb-8">Airlines & Aviation</h1>
         
         {/* Toggle Buttons */}
-        <div className="flex space-x-4 mb-8">
+        <div className="flex flex-wrap gap-4 mb-8">
           {Object.keys(sections).map((section) => (
             <button
               key={section}

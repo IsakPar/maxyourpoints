@@ -1,4 +1,9 @@
-import post from "./post"
-import category from "./category"
+import { article } from './article'
+import { category } from './category'
+import { quoteBlock } from './quoteBlock'
 
-export const schemaTypes = [post, category] 
+export const schemaTypes = [
+  article,
+  category,
+  quoteBlock
+] 

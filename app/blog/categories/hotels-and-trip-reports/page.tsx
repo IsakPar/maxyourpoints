@@ -24,6 +24,8 @@ export default function HotelsPage() {
       <CategoryHero
         title="Hotels & Trip Reports"
         subtitle="Luxury, boutique, and budget — plus firsthand travel stories from around the world."
+        imageSrc="/images/iberostar-Coral-Beach.jpeg"
+        imageAlt="IberoStar Coral Beach"
       />
       <FeaturedPosts posts={featuredPosts} />
       <FilteredBlogGrid posts={gridPosts} />

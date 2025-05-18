@@ -35,11 +35,15 @@ const BlogPost = ({ post }: BlogPostProps) => {
 
   return (
     <div
-      className="flex-1 flex flex-col md:flex-row justify-start items-start md:items-start gap-4 md:gap-8 p-4 rounded-lg transition-all duration-300 hover:shadow-elevation cursor-pointer bg-transparent"
+      className="flex-1 flex flex-col md:flex-row justify-start items-start md:items-start gap-4 md:gap-8 p-4 rounded-lg transition-all duration-300 hover:shadow-elevation hover:scale-[1.02] cursor-pointer bg-transparent group"
       onClick={handleCardClick}
     >
       <div className="w-full md:w-2/5 h-48 md:h-64 flex-shrink-0 overflow-hidden rounded-md">
-        <img src={image || "/placeholder.svg"} alt={title} className="w-full h-full object-cover" />
+        <img 
+          src={image || "/placeholder.svg"} 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+        />
       </div>
       <div className="w-full md:w-3/5 flex flex-col justify-start items-start gap-4 md:gap-6">
         <div className="w-full flex flex-col justify-start items-start gap-4">
@@ -48,7 +52,7 @@ const BlogPost = ({ post }: BlogPostProps) => {
             <div className="text-stone-950 text-sm font-bold font-['Inter'] leading-tight">{readTime}</div>
           </div>
           <div className="w-full flex flex-col justify-start items-start gap-2">
-            <h3 className="w-full text-stone-950 text-xl md:text-2xl font-bold leading-relaxed md:leading-loose">
+            <h3 className="w-full text-stone-950 text-xl md:text-2xl font-bold leading-relaxed md:leading-loose group-hover:text-teal-600 transition-colors">
               {title}
             </h3>
             <p className="w-full text-stone-950 text-base font-bold font-['Inter'] leading-normal line-clamp-3">
@@ -60,9 +64,9 @@ const BlogPost = ({ post }: BlogPostProps) => {
           className="rounded-xl inline-flex justify-center items-center gap-2 text-stone-950 hover:text-orange-500 transition-colors"
           onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
         >
-          <Link href={slug} className="inline-flex items-center gap-2">
+          <Link href={slug} className="inline-flex items-center gap-2 group/link">
             <span className="text-base font-bold font-['Inter'] leading-normal">Read more</span>
-            <ChevronRight size={24} />
+            <ChevronRight size={24} className="transition-transform duration-300 group-hover/link:translate-x-1" />
           </Link>
         </div>
       </div>

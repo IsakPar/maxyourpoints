@@ -15,7 +15,7 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   { label: "Credit Cards & Points", href: "/blog/categories/credit-cards-and-points" },
-  { label: "Airlines & Aviation", href: "/blog/categories/airlines-and-aviation" },
+  { label: "Airlines & Aviation", href: "/blog/categories/airline-and-aviation" },
   { label: "Hotels & Trip Reports", href: "/blog/categories/hotels-and-trip-reports" },
   { label: "Travel Hacks & Deals", href: "/blog/categories/travel-hacks-and-deals" }
 ]
@@ -56,7 +56,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav
-        className={`w-full h-16 px-4 md:px-16 bg-emerald-50 flex items-center justify-between fixed top-0 left-0 z-50 transition-all duration-300 ${
+        className={`w-full h-16 px-4 md:px-16 bg-emerald-50 flex items-center justify-between fixed top-0 left-0 z-40 transition-all duration-300 ${
           isScrolled ? "shadow-md" : ""
         }`}
       >

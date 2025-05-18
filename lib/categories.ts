@@ -10,13 +10,13 @@ export interface Category {
 export const categories: Category[] = [
   {
     label: "Airlines & Aviation",
-    slug: "airlines-and-aviation",
+    slug: "airline-and-aviation",
     subcategories: [
       { label: "Reviews", slug: "reviews" },
       { label: "News", slug: "news" },
       { label: "Deals", slug: "deals" },
-      { label: "Guides", slug: "guides" }
-    ]
+      { label: "Guides", slug: "guides" },
+    ],
   },
   {
     label: "Credit Cards & Points",
@@ -25,8 +25,8 @@ export const categories: Category[] = [
       { label: "Reviews", slug: "reviews" },
       { label: "News", slug: "news" },
       { label: "Deals", slug: "deals" },
-      { label: "Guides", slug: "guides" }
-    ]
+      { label: "Guides", slug: "guides" },
+    ],
   },
   {
     label: "Hotels & Trip Reports",
@@ -35,18 +35,20 @@ export const categories: Category[] = [
       { label: "Reviews", slug: "reviews" },
       { label: "News", slug: "news" },
       { label: "Deals", slug: "deals" },
-      { label: "Trip Reports", slug: "trip-reports" }
-    ]
+      { label: "Trip Reports", slug: "trip-reports" },
+      { label: "Guides", slug: "guides" },
+    ],
   },
   {
     label: "Travel Hacks & Deals",
     slug: "travel-hacks-and-deals",
     subcategories: [
       { label: "News", slug: "news" },
+      { label: "Guides", slug: "guides" },
       { label: "Deals", slug: "deals" },
-      { label: "Guides", slug: "guides" }
-    ]
-  }
+      { label: "Price Alerts", slug: "price-alerts" },
+    ],
+  },
 ]
 
 // Helper functions

@@ -24,6 +24,8 @@ export default function CreditCardsPage() {
       <CategoryHero
         title="Master Your Credit Card Rewards"
         subtitle="Discover how to maximize your credit card rewards and points, from choosing the right cards to strategic spending and redemption strategies."
+        imageSrc="/images/cardmapr-nl-EjAkfNQb46k-unsplash.jpg"
+        imageAlt="a series of different AMEX cards on a table"
       />
       <FeaturedPosts posts={featuredPosts} />
       <FilteredBlogGrid posts={gridPosts} />

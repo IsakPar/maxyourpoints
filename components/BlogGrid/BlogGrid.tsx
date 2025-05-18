@@ -7,46 +7,12 @@ interface BlogGridProps {
   posts: BlogPost[]
 }
 
-type FilterType = "Reviews" | "News" | "Guides" | "Trip Reports" | null
-
 export default function BlogGrid({ posts }: BlogGridProps) {
-  const [activeFilter, setActiveFilter] = React.useState<FilterType>(null)
-
-  const filters: FilterType[] = ["Reviews", "News", "Guides", "Trip Reports"]
-
-  const filteredPosts = React.useMemo(() => {
-    if (!activeFilter) return posts
-    return posts.filter(post => post.tag === activeFilter)
-  }, [posts, activeFilter])
-
-  const handleFilterClick = (filter: FilterType) => {
-    setActiveFilter(current => current === filter ? null : filter)
-  }
-
   return (
     <div className="w-full bg-[#D1F1EB] py-12">
-      {/* Toggle Menu */}
-      <div className="flex justify-center mb-12">
-        <div className="inline-flex rounded-lg border border-stone-200 p-1 bg-white shadow-sm">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => handleFilterClick(filter)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
-                ${activeFilter === filter 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'text-stone-600 hover:bg-stone-100'
-                }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Blog Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
-        {filteredPosts.map((post) => (
+        {posts.map((post) => (
           <article 
             key={post.id}
             className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"

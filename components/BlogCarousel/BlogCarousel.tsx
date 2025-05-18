@@ -291,14 +291,14 @@ const BlogCarousel = ({
                 style={{ width: `${100 / getPostsPerView()}%` }}
               >
                 <article
-                  className={`h-full ${currentTheme.card} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer`}
+                  className={`h-full ${currentTheme.card} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:scale-[1.02]`}
                   onClick={() => handleCardClick(post.slug)}
                 >
-                  <div className="aspect-[16/9] relative">
+                  <div className="aspect-[16/9] relative overflow-hidden">
                     <img
                       src={post.image}
                       alt={post.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                   <div className="p-6">
@@ -308,11 +308,16 @@ const BlogCarousel = ({
                       </span>
                       <span className={`text-sm ${currentTheme.date}`}>{post.readTime}</span>
                     </div>
-                    <h3 className={`text-xl font-semibold mb-3 ${currentTheme.title}`}>{post.title}</h3>
+                    <h3 className={`text-xl font-semibold mb-3 ${currentTheme.title} group-hover:text-teal-600 transition-colors`}>{post.title}</h3>
                     <p className={`text-base ${currentTheme.excerpt} mb-4`}>{post.excerpt}</p>
                     <div className="flex items-center justify-between">
                       <span className={`text-sm ${currentTheme.date}`}>{post.date}</span>
-                      <OutlinedGradientButton href={post.slug}>Read More</OutlinedGradientButton>
+                      <OutlinedGradientButton href={post.slug}>
+                        <span className="inline-flex items-center gap-2 group/link">
+                          Read More
+                          <ChevronRight size={20} className="transition-transform duration-300 group-hover/link:translate-x-1" />
+                        </span>
+                      </OutlinedGradientButton>
                     </div>
                   </div>
                 </article>
