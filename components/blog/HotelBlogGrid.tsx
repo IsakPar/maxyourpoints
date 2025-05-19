@@ -3,13 +3,13 @@
 import * as React from "react"
 import { type BlogPost } from "@/lib/posts"
 
-interface AirlineBlogGridProps {
+interface HotelBlogGridProps {
   posts: BlogPost[]
 }
 
 type FilterType = "Reviews" | "News" | "Guides" | "Deals" | null
 
-export default function AirlineBlogGrid({ posts }: AirlineBlogGridProps) {
+export default function HotelBlogGrid({ posts }: HotelBlogGridProps) {
   const [activeFilter, setActiveFilter] = React.useState<FilterType>(null)
 
   const filters: FilterType[] = ["Reviews", "News", "Deals", "Guides"]

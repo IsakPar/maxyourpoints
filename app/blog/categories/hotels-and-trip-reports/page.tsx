@@ -5,7 +5,7 @@ import { posts } from "@/lib/posts"
 import CTASection from "@/components/CTASection/CTASection"
 import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
-import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
+import HotelBlogGrid from "@/components/blog/HotelBlogGrid"
 
 export default function HotelsPage() {
   // Filter posts for this category
@@ -28,7 +28,7 @@ export default function HotelsPage() {
         imageAlt="IberoStar Coral Beach"
       />
       <FeaturedPosts posts={featuredPosts} />
-      <FilteredBlogGrid posts={gridPosts} />
+      <HotelBlogGrid posts={gridPosts} />
       <div className="bg-teal-50">
         <CTASection />
       </div>

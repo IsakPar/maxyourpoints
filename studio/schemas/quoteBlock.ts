@@ -14,11 +14,18 @@ export const quoteBlock = defineType({
     defineField({
       name: 'author',
       title: 'Author',
-      type: 'string'
+      type: 'string',
+      validation: Rule => Rule.required()
     }),
     defineField({
       name: 'source',
       title: 'Source',
+      type: 'string',
+      validation: Rule => Rule.max(100)
+    }),
+    defineField({
+      name: 'context',
+      title: 'Context / Notes',
       type: 'string'
     })
   ],
@@ -28,4 +35,4 @@ export const quoteBlock = defineType({
       subtitle: 'author'
     }
   }
-}) 
+})

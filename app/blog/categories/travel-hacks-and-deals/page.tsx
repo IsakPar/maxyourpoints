@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { posts } from "@/lib/posts"
-import CTASection from "@/components/CTASection/CTASection"
 import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
-import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
+import TravelHackBlogGrid from "@/components/blog/TravelHackBlogGrid"
+import CTASection from "@/components/CTASection/CTASection"
 
 export default function TravelHacksPage() {
   // Filter posts for this category
@@ -20,18 +20,18 @@ export default function TravelHacksPage() {
   const gridPosts = travelHackPosts.slice(3)
 
   return (
-    <main>
+    <div className="min-h-screen bg-white">
       <CategoryHero
         title="Travel Hacks & Deals"
-        subtitle="Get the most out of your trips with insider tips, tricks, and timely deals you don't want to miss."
+        subtitle="Insider tips and deals to maximize your travel experience"
         imageSrc="/images/marius-kriz-DH5eyHWPT50-unsplash.jpg"
-        imageAlt="Tropical island with sign here is koh samui"
+        imageAlt="Palm tree and beach at Koh Samui"
       />
       <FeaturedPosts posts={featuredPosts} />
-      <FilteredBlogGrid posts={gridPosts} />
+      <TravelHackBlogGrid posts={gridPosts} />
       <div className="bg-teal-50">
         <CTASection />
       </div>
-    </main>
+    </div>
   )
 } 

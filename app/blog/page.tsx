@@ -79,7 +79,7 @@ export default function BlogPage() {
             {/* Right Column - Text Content */}
             <div className="flex-1 space-y-6">
               <p className="text-lg text-stone-700">
-                Welcome to our blog, where we empower travelers with valuable tips and insights across various categories. Discover the latest in airline news, credit card rewards, hotel reviews, and travel hacks to maximize your adventures.
+                Smart tips, expert reviews, and hidden travel hacks — all in one place.
               </p>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function BlogPage() {
               Explore Our Travel Insights
             </h2>
             <p className="text-lg text-stone-700">
-              Discover tips, tricks, and stories from our adventures.
+              Smart tips, expert reviews, and hidden travel hacks — all in one place.
             </p>
           </div>
 

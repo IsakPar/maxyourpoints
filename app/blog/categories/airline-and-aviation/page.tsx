@@ -6,7 +6,7 @@ import CTASection from "@/components/CTASection/CTASection"
 import Image from "next/image"
 import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
-import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
+import AirlineBlogGrid from "@/components/blog/AirlineBlogGrid"
 
 export default function AirlineAndAviationPage() {
   // Filter posts for airline category
@@ -27,7 +27,7 @@ export default function AirlineAndAviationPage() {
         imageAlt="Business class seat before takeoff"
       />
       <FeaturedPosts posts={featuredPosts} />
-      <FilteredBlogGrid posts={gridPosts} />
+      <AirlineBlogGrid posts={gridPosts} />
       <div className="bg-teal-50">
         <CTASection />
       </div>

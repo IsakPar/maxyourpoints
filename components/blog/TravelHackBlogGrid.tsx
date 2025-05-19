@@ -3,16 +3,16 @@
 import * as React from "react"
 import { type BlogPost } from "@/lib/posts"
 
-interface AirlineBlogGridProps {
+interface TravelHackBlogGridProps {
   posts: BlogPost[]
 }
 
-type FilterType = "Reviews" | "News" | "Guides" | "Deals" | null
+type FilterType = "News" | "Guides" | "Deals" | null
 
-export default function AirlineBlogGrid({ posts }: AirlineBlogGridProps) {
+export default function TravelHackBlogGrid({ posts }: TravelHackBlogGridProps) {
   const [activeFilter, setActiveFilter] = React.useState<FilterType>(null)
 
-  const filters: FilterType[] = ["Reviews", "News", "Deals", "Guides"]
+  const filters: FilterType[] = ["News", "Guides", "Deals"]
 
   const filteredPosts = React.useMemo(() => {
     if (!activeFilter) return posts

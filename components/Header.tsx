@@ -30,15 +30,15 @@ const Header: React.FC = () => {
               Unlock Your Travel Potential with MaxYourPoints
             </h1>
             <p className="text-lg md:text-xl text-stone-700 mb-4 font-sans text-left">
-              Discover expert tips on maximizing your travel rewards, from airline points to hotel deals that offer incredible value…
+              Discover how to turn points into possibilities — with expert tips on flights, hotels, and credit card rewards.
             </p>
           </div>
           <div>
             <ul className="space-y-4 text-stone-800 text-base md:text-lg font-sans">
-              <li>• Learn to optimize your travel rewards and points</li>
-              <li>• Join a savvy community of travelers</li>
-              <li>• Explore the world more efficiently and affordably</li>
-              <li>• Get the latest insights on airlines, hotels, and travel hacks</li>
+              <li>• Learn how to optimize your travel rewards</li>
+              <li>• Join a savvy community of points pros</li>
+              <li>• Travel further, better, and more affordably</li>
+              <li>• Get insider insights on airlines, hotels, and travel hacks</li>
             </ul>
           </div>
         </div>

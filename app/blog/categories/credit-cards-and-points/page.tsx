@@ -5,7 +5,7 @@ import { posts } from "@/lib/posts"
 import CTASection from "@/components/CTASection/CTASection"
 import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
-import FilteredBlogGrid from "@/components/blog/FilteredBlogGrid"
+import CreditCardBlogGrid from "@/components/blog/CreditCardBlogGrid"
 
 export default function CreditCardsPage() {
   // Filter posts for this category
@@ -28,7 +28,7 @@ export default function CreditCardsPage() {
         imageAlt="a series of different AMEX cards on a table"
       />
       <FeaturedPosts posts={featuredPosts} />
-      <FilteredBlogGrid posts={gridPosts} />
+      <CreditCardBlogGrid posts={gridPosts} />
       <div className="bg-teal-50">
         <CTASection />
       </div>

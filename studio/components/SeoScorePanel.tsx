@@ -8,7 +8,7 @@ const SeoScorePanel = () => {
   const slug = useFormValue(['slug', 'current']) as string
   const meta = useFormValue(['seoMetaDescription']) as string
   const keyword = useFormValue(['focusKeyword']) as string
-  const blocks = useFormValue(['contentBlocks']) as any[]
+  const blocks = useFormValue(['content']) as any[]
 
   const scoreDetails = useMemo(() => {
     if (!keyword) return { score: 0, checks: [] }
