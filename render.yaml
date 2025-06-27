@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: max-your-points-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: pnpm install --frozen-lockfile && pnpm dlx prisma generate && pnpm run build
+    startCommand: pnpm dlx prisma db push && pnpm start
+    plan: starter
+    region: frankfurt
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PRISMA_DISABLE_TELEMETRY
+        value: "1"
+      - key: PRISMA_DISABLE_TRACING
+        value: "1"
+      - key: PRISMA_SKIP_POSTINSTALL_GENERATE
+        value: "true"
+      - key: RUST_BACKTRACE
+        value: "1"
+      - key: PRISMA_ENGINE_TYPE
+        value: "binary"
+      - key: PRISMA_QUERY_ENGINE_BINARY
+        value: "query-engine"
+      - key: NODE_ENV
+        value: "production"
+      - key: JWT_SECRET
+        value: max-your-points-super-secret-jwt-key-2024-production
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: LOG_LEVEL
+        value: info
+      - key: FRONTEND_URL
+        generateValue: true # Will be set after frontend deployment
+      - key: CORS_ORIGIN
+        generateValue: true # Will be set after frontend deployment
+      # Database URL for Render PostgreSQL - FORCING THIS VALUE
+      - key: DATABASE_URL
+        value: "postgresql://cheeky_penguin_user:tJARpyzt5Kjpm2p4tl0BcBheV5YsWeOo@dpg-d1e6kjadbo4c73ch06ng-a.frankfurt-postgres.render.com/cheeky_penguin"
+      # Cloudinary settings - you'll need to set these manually
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Mailgun settings - you'll need to set these manually  
+      - key: MAILGUN_API_KEY
+        sync: false
+      - key: MAILGUN_DOMAIN
+        sync: false
+      - key: MAILGUN_FROM_EMAIL
+        sync: false
+
+# Using existing Render PostgreSQL database
+# Database URL configured in environment variables above 

@@ -1,0 +1,9 @@
+{
+  "services": {
+    "backend": {
+      "root": "backend",
+      "buildCommand": "npx prisma db push",
+      "startCommand": "npm start"
+    }
+  }
+}
