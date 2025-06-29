@@ -62,12 +62,12 @@ class APIClient {
     let url: string;
     
     if (typeof window !== 'undefined') {
-      // Client-side: use relative URLs
+      // Client-side: use relative URLs (automatically uses current port)
       url = `/api${endpoint}`;
     } else {
       // Server-side: use absolute URL with dynamic port detection
-      const port = process.env.PORT || process.env.NEXT_PUBLIC_PORT || '3000';
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${port}`;
+      const port = process.env.PORT || '3001'; // Use actual PORT env var or default to 3001
+      const baseUrl = `http://localhost:${port}`;
       url = `${baseUrl}/api${endpoint}`;
     }
     
@@ -279,7 +279,7 @@ class APIClient {
       url = `/api/admin/upload`;
     } else {
       // Server-side: use absolute URL
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://maxyourpoints.com' : 'http://localhost:3000');
       url = `${baseUrl}/api/admin/upload`;
     }
     

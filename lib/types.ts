@@ -7,6 +7,7 @@ export interface Article {
   slug: string
   summary: string
   content: any // Rich text content
+  image?: string // Hero image URL from transform function
   heroImage?: {
     url: string
     alt: string

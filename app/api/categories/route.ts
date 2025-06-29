@@ -1,25 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { withCache, cacheKeys, cacheTTL, invalidateCategoryCache } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('📄 Fetching categories from Supabase...')
 
-    const { data: categories, error } = await supabaseAdmin
-      .from('categories')
-      .select('id, name, slug, description, created_at')
-      .order('name', { ascending: true })
+    const result = await withCache(
+      cacheKeys.categories.all(),
+      async () => {
+        console.log('🔄 Cache miss - fetching categories from database')
+        
+        const { data: categories, error } = await supabaseAdmin
+          .from('categories')
+          .select('id, name, slug, description, created_at')
+          .order('name', { ascending: true })
 
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
+        if (error) {
+          throw new Error(`Database error: ${error.message}`)
+        }
 
-    console.log(`✅ Found ${categories?.length || 0} categories`)
+        return {
+          categories: categories || []
+        }
+      },
+      cacheTTL.categories
+    )
 
-    return NextResponse.json({
-      categories: categories || []
-    })
+    console.log(`✅ Found ${result.categories.length} categories`)
+
+    return NextResponse.json(result)
 
   } catch (error: any) {
     console.error('Categories API error:', error)
@@ -54,6 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Category created successfully:', newCategory.id)
+
+    // Invalidate category cache
+    invalidateCategoryCache()
 
     return NextResponse.json({
       success: true,

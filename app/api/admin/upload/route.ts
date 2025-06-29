@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { hasPermission } from '@/lib/permissions'
 import sharp from 'sharp'
 import heicConvert from 'heic-convert'
 import tinify from 'tinify'
@@ -27,6 +28,13 @@ export async function POST(request: NextRequest) {
         error: 'Unauthorized',
         message: 'Authentication required'
       }, { status: 401 })
+    }
+
+    if (!hasPermission(user, 'media:upload')) {
+      return NextResponse.json({
+        error: 'Forbidden',
+        message: 'You do not have permission to upload media'
+      }, { status: 403 })
     }
 
     console.log('📤 File upload requested by user:', user.email)

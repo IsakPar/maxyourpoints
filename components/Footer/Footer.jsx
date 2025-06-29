@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react"
+import { Twitter } from "lucide-react"
 import { Button } from "../ui/button"
 import { SubscriptionSuccess } from "../blog/SubscriptionSuccess"
 
@@ -159,8 +159,8 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/reviews" className="text-gray-600 hover:text-emerald-600">
-                    Reviews
+                  <Link href="/contact" className="text-gray-600 hover:text-emerald-600">
+                    Contact Us
                   </Link>
                 </li>
               </ul>
@@ -212,20 +212,10 @@ const Footer = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-black">Follow Us</h3>
                 <div className="flex space-x-4">
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                    <Facebook size={20} />
-                  </a>
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                    <Twitter size={20} />
-                  </a>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                    <Instagram size={20} />
-                  </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                    <Linkedin size={20} />
-                  </a>
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                    <Youtube size={20} />
+                  <a href="https://x.com/max_your_points" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-emerald-600 transition-colors" title="Follow us on X">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -236,9 +226,9 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-600">&copy; {new Date().getFullYear()} Max Your Points. All rights reserved.</p>
               <p className="text-gray-600">
-                Built by{" "}
-                <GradientLink href="https://impdigital.services">
-                  IMP Digital Services
+                Built with love by{" "}
+                <GradientLink href="mailto:isak@maxyourpoints.com">
+                  Isak Parild
                 </GradientLink>
               </p>
             </div>

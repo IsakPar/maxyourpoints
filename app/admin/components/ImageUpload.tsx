@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import SimpleModal from './SimpleModal'
 import { Upload, X, Image as ImageIcon, Loader2, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
@@ -400,24 +400,25 @@ export default function ImageUpload({
       )}
 
       {/* Upload Preview and Metadata Modal */}
-      <Dialog open={!!uploadPreview} onOpenChange={() => cancelUpload()}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Image Details</DialogTitle>
-            <DialogDescription>
-              Please add alt text and caption before uploading your image.
-            </DialogDescription>
-          </DialogHeader>
+      <SimpleModal 
+        isOpen={!!uploadPreview} 
+        onClose={cancelUpload}
+        title="Add Image Details"
+      >
+        <div className="space-y-6">
+          <p className="text-lg text-gray-700 mb-6 font-medium">
+            Please add alt text and caption before uploading your image.
+          </p>
           
           {uploadPreview && (
-            <div className="space-y-4">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+            <>
+              <div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden mb-8">
                 {uploadPreview.isHEIC ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
-                      <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">HEIC Preview</p>
-                      <p className="text-xs text-gray-500">Will be converted to PNG</p>
+                      <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg text-gray-600">HEIC Preview</p>
+                      <p className="text-sm text-gray-500">Will be converted to PNG</p>
                     </div>
                   </div>
                 ) : (
@@ -429,53 +430,92 @@ export default function ImageUpload({
                 )}
               </div>
               
-              <div>
-                <Label className="text-sm font-medium">
-                  Alt Text <span className="text-red-500">*</span>
-                </Label>
-                <Textarea
-                  placeholder="Describe the image for accessibility and SEO..."
-                  value={pendingAltText}
-                  onChange={(e) => setPendingAltText(e.target.value)}
-                  className="mt-1"
-                  rows={2}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Essential for accessibility and SEO
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-lg font-semibold text-gray-800 block mb-3">
+                    Alt Text <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    placeholder="Describe the image for accessibility and SEO..."
+                    value={pendingAltText}
+                    onChange={(e) => setPendingAltText(e.target.value)}
+                    className="w-full text-lg p-4 min-h-[100px] border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    rows={4}
+                    style={{
+                      fontSize: '16px',
+                      padding: '16px',
+                      minHeight: '100px',
+                      borderWidth: '2px',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <p className="text-sm text-gray-600 mt-2 font-medium">
+                    Essential for accessibility and SEO
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-lg font-semibold text-gray-800 block mb-3">Caption</Label>
+                  <Input
+                    placeholder="Optional caption that will appear below the image..."
+                    value={pendingCaption}
+                    onChange={(e) => setPendingCaption(e.target.value)}
+                    className="w-full text-lg p-4 h-14 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    style={{
+                      fontSize: '16px',
+                      padding: '16px',
+                      height: '56px',
+                      borderWidth: '2px',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-lg font-semibold text-gray-800 block mb-3">Title</Label>
+                  <Input
+                    placeholder="Optional title attribute for the image..."
+                    value={pendingTitle}
+                    onChange={(e) => setPendingTitle(e.target.value)}
+                    className="w-full text-lg p-4 h-14 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    style={{
+                      fontSize: '16px',
+                      padding: '16px',
+                      height: '56px',
+                      borderWidth: '2px',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </div>
               </div>
               
-              <div>
-                <Label className="text-sm font-medium">Caption</Label>
-                <Input
-                  placeholder="Optional caption that will appear below the image..."
-                  value={pendingCaption}
-                  onChange={(e) => setPendingCaption(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Title</Label>
-                <Input
-                  placeholder="Optional title attribute for the image..."
-                  value={pendingTitle}
-                  onChange={(e) => setPendingTitle(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={cancelUpload}>
+              <div className="flex justify-end space-x-4 pt-8 border-t mt-8">
+                <Button 
+                  variant="outline" 
+                  onClick={cancelUpload}
+                  className="px-8 py-4 text-lg font-semibold h-14"
+                  style={{
+                    padding: '16px 32px',
+                    fontSize: '16px',
+                    height: '56px'
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleUpload}
                   disabled={isUploading || !pendingAltText.trim()}
+                  className="px-8 py-4 text-lg font-semibold h-14 bg-blue-600 hover:bg-blue-700"
+                  style={{
+                    padding: '16px 32px',
+                    fontSize: '16px',
+                    height: '56px',
+                    backgroundColor: isUploading || !pendingAltText.trim() ? '#94a3b8' : '#2563eb'
+                  }}
                 >
                   {isUploading ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
                       Uploading...
                     </>
                   ) : (
@@ -483,10 +523,10 @@ export default function ImageUpload({
                   )}
                 </Button>
               </div>
-            </div>
+            </>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </SimpleModal>
     </div>
   )
 } 

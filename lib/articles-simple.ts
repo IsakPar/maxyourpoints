@@ -331,20 +331,48 @@ export async function searchArticles(query: string, limit: number = 10, offset: 
 
   return withCache(cacheKey, async () => {
     try {
-      // For now, return all articles and filter client-side
-      // This can be enhanced when we add search to the API
+      // Get ALL published articles for comprehensive search
+      // No limit to ensure we can find articles that have been "pushed out" from display pages
       const data = await api.getArticles({ 
-        limit: 50, 
         published: true
+        // Intentionally no limit - we need to search through ALL articles
       })
 
       const allArticles = (data.articles || []).map(transformToFrontendFormat)
       
-      // Simple client-side search
-      const filteredArticles = allArticles.filter(article => 
-        article.title.toLowerCase().includes(query.toLowerCase()) ||
-        article.summary.toLowerCase().includes(query.toLowerCase())
-      )
+      // Enhanced client-side search - search in title, summary, content, tags, and headers
+      const searchQuery = query.toLowerCase()
+      const filteredArticles = allArticles.filter(article => {
+        // Search in title and summary
+        const titleMatch = article.title.toLowerCase().includes(searchQuery)
+        const summaryMatch = article.summary?.toLowerCase().includes(searchQuery)
+        
+        // Search in tags
+        const tags = article.tags || []
+        const tagMatch = Array.isArray(tags) ? 
+          tags.some(tag => tag.toLowerCase().includes(searchQuery)) : false
+        
+        // Search in content (including headers)
+        let contentMatch = false
+        if (article.content) {
+          const content = typeof article.content === 'string' ? article.content : JSON.stringify(article.content)
+          contentMatch = content.toLowerCase().includes(searchQuery)
+          
+          // Also check for header patterns (# ## ### in markdown)
+          const headerMatches = content.match(/^#{1,6}\s+(.+)$/gm) || []
+          const headerMatch = headerMatches.some(header => 
+            header.toLowerCase().includes(searchQuery)
+          )
+          contentMatch = contentMatch || headerMatch
+        }
+        
+        // Search in category
+        const categoryMatch = typeof article.category === 'object' ? 
+          article.category.name?.toLowerCase().includes(searchQuery) :
+          article.category?.toLowerCase().includes(searchQuery)
+        
+        return titleMatch || summaryMatch || tagMatch || contentMatch || categoryMatch
+      })
 
       const start = offset
       const end = offset + limit

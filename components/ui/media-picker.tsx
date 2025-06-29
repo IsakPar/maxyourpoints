@@ -207,7 +207,7 @@ export default function MediaPicker({
           </Button>
         </DialogTrigger>
         
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Select or Upload Image</DialogTitle>
             <DialogDescription>

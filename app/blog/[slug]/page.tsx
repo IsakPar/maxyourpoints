@@ -1,6 +1,7 @@
 import React from "react"
 import { notFound } from "next/navigation"
 import { getArticleBySlug, getArticlesByCategory, getPublishedArticles } from "@/lib/articles-simple"
+import { convertMarkdownToHtml } from "@/lib/markdown"
 import Image from "next/image"
 import Link from "next/link"
 import { Clock, User, ArrowLeft, Calendar } from "lucide-react"
@@ -93,22 +94,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <div className="px-6 sm:px-8 pb-8">
                   {article.content ? (
                     <div 
-                      dangerouslySetInnerHTML={{ __html: article.content }}
-                      className="prose prose-stone prose-lg max-w-none
-                        prose-headings:text-stone-900 prose-headings:font-bold
-                        prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                        prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline
-                        prose-strong:text-stone-900 prose-strong:font-semibold
-                        prose-ul:text-gray-700 prose-ol:text-gray-700
-                        prose-li:text-gray-700 prose-li:leading-relaxed prose-li:mb-1
-                        prose-blockquote:border-l-emerald-500 prose-blockquote:bg-emerald-50/50 
-                        prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-xl
-                        prose-blockquote:border-l-4 prose-blockquote:italic
-                        prose-img:rounded-xl prose-img:shadow-lg prose-img:border prose-img:border-emerald-100
-                        prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded
-                        prose-pre:bg-gray-900 prose-pre:rounded-xl
-                      "
+                      className="article-content prose prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(article.content) }}
                     />
                   ) : (
                     <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-8 rounded-2xl border border-emerald-200">
@@ -183,7 +170,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <Link
                       href="/blog"
-                      className="block text-center py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                      className="block text-center py-3 px-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       View All Articles
                     </Link>

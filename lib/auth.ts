@@ -115,6 +115,17 @@ export async function requireAdmin(): Promise<AuthUser> {
   return user
 }
 
+// Check if user can access admin panel (any CMS access)
+export async function requireCMSAccess(): Promise<AuthUser> {
+  const user = await getAuthUser()
+  
+  if (!user || !['admin', 'super_admin', 'editor', 'viewer', 'author'].includes(user.role)) {
+    redirect('/login?error=unauthorized')
+  }
+
+  return user
+}
+
 // Check if user is authenticated
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getAuthUser()

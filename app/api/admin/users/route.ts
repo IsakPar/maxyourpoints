@@ -1,44 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { verifyAuthUser } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-
-// Temporary admin for fallback
-const TEMP_ADMIN = {
-  id: 'temp-admin-001',
-  email: 'isak@maxyourpoints.com',
-  name: 'Isak Parild',
-      role: 'admin',
-  verified: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  last_login: new Date().toISOString()
-}
-
-function verifyToken(token: string) {
-  try {
-    const secret = process.env.JWT_SECRET || 'your-jwt-secret'
-    return jwt.verify(token, secret) as any
-  } catch {
-    return null
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
+    // Check authentication - use same pattern as articles API
+    const authUser = await verifyAuthUser(request)
+    
+    if (!authUser) {
       return NextResponse.json({
         error: 'Unauthorized',
-        message: 'No authentication token provided'
+        message: 'Authentication required to access users'
       }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded || !['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
+    // Check if user has admin privileges
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
       return NextResponse.json({
         error: 'Forbidden',
         message: 'Admin access required'
@@ -46,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // Try to get users from Supabase
+      // Get users from Supabase
       const { data: users, error } = await supabaseAdmin
         .from('users')
         .select('id, email, name, full_name, role, verified, created_at, updated_at, last_login')
@@ -61,14 +39,12 @@ export async function GET(request: NextRequest) {
         users
       })
 
-    } catch (dbError) {
-      // Fallback to temp admin when database fails
-      console.log('Database unavailable, returning temp admin')
+    } catch (dbError: any) {
+      console.error('Database error fetching users:', dbError)
       return NextResponse.json({
-        success: true,
-        users: [TEMP_ADMIN],
-        message: 'Mock data - database unavailable'
-      })
+        error: 'Database error',
+        message: dbError.message
+      }, { status: 500 })
     }
 
   } catch (error: any) {
@@ -83,18 +59,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
+    const authUser = await verifyAuthUser(request)
+    
+    if (!authUser) {
       return NextResponse.json({
         error: 'Unauthorized',
-        message: 'No authentication token provided'
+        message: 'Authentication required to create users'
       }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded || !['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
+    // Check if user has admin privileges
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
       return NextResponse.json({
         error: 'Forbidden',
         message: 'Admin access required'
@@ -178,18 +153,17 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // Check authentication
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
+    const authUser = await verifyAuthUser(request)
+    
+    if (!authUser) {
       return NextResponse.json({
         error: 'Unauthorized',
-        message: 'No authentication token provided'
+        message: 'Authentication required to update users'
       }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded || !['ADMIN', 'SUPER_ADMIN'].includes(decoded.role)) {
+    // Check if user has admin privileges
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
       return NextResponse.json({
         error: 'Forbidden',
         message: 'Admin access required'
@@ -250,21 +224,20 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Check authentication
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
+    const authUser = await verifyAuthUser(request)
+    
+    if (!authUser) {
       return NextResponse.json({
         error: 'Unauthorized',
-        message: 'No authentication token provided'
+        message: 'Authentication required to delete users'
       }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded || !['super_admin', 'admin'].includes(decoded.role)) {
+    // Check if user has admin privileges
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
       return NextResponse.json({
         error: 'Forbidden',
-        message: 'Super admin access required for user deletion'
+        message: 'Admin access required for user deletion'
       }, { status: 403 })
     }
 
@@ -279,7 +252,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent self-deletion
-    if (decoded.userId === userId) {
+    if (authUser.id === userId) {
       return NextResponse.json({
         error: 'Cannot delete yourself',
         message: 'You cannot delete your own account'

@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -8,54 +10,116 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
+  // Skip authentication completely for login page and public routes
+  const publicPaths = [
+    '/login',
+    '/api/auth',
+    '/_next',
+    '/favicon',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/'  // Allow homepage without auth
+  ]
+  
+  const isPublicPath = publicPaths.some(path => 
+    request.nextUrl.pathname === path || 
+    request.nextUrl.pathname.startsWith(path + '/')
   )
-
-  // Check for admin routes
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isLoginPage = request.nextUrl.pathname === '/login'
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
-
-  // Skip middleware for API routes to prevent slowdowns
-  if (isApiRoute) {
+  
+  if (isPublicPath) {
+    console.log('🌍 Public route accessed:', request.nextUrl.pathname)
     return response
   }
 
-  if (isAdminRoute && !isLoginPage) {
-    // Check authentication
-    const { data: { user }, error } = await supabase.auth.getUser()
+  // Only protect admin routes
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    try {
+      // Create a Supabase client configured to use cookies
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return request.cookies.get(name)?.value
+            },
+            set(name: string, value: string, options: CookieOptions) {
+              request.cookies.set({
+                name,
+                value,
+                ...options,
+              })
+              response = NextResponse.next({
+                request: {
+                  headers: request.headers,
+                },
+              })
+              response.cookies.set({
+                name,
+                value,
+                ...options,
+              })
+            },
+            remove(name: string, options: CookieOptions) {
+              request.cookies.set({
+                name,
+                value: '',
+                ...options,
+              })
+              response = NextResponse.next({
+                request: {
+                  headers: request.headers,
+                },
+              })
+              response.cookies.set({
+                name,
+                value: '',
+                ...options,
+              })
+            },
+          },
+        }
+      )
 
-    if (error || !user) {
-      // No user found, redirect to login
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
-    }
-  }
+      // PHASE 1: Enhanced authentication with session timeout
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        console.log('❌ No authenticated user found, redirecting to login')
+        return NextResponse.redirect(new URL('/login?error=authentication_required', request.url))
+      }
 
-  // If user is already logged in and tries to access login page, redirect to admin
-  if (isLoginPage) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      return NextResponse.redirect(new URL('/admin', request.url))
+      // Check session timeout (15-minute inactivity)
+      const lastActivity = user.user_metadata?.last_activity
+      if (lastActivity) {
+        const timeSinceActivity = Date.now() - new Date(lastActivity).getTime()
+        const minutesSinceActivity = Math.floor(timeSinceActivity / (1000 * 60))
+        
+        if (timeSinceActivity > SESSION_TIMEOUT_MS) {
+          console.log(`⏰ Session expired for ${user.email} (${minutesSinceActivity} minutes of inactivity)`)
+          // Session expired - sign out and redirect
+          await supabase.auth.signOut()
+          return NextResponse.redirect(new URL('/login?error=session_expired', request.url))
+        }
+      }
+
+      // Update last activity timestamp (silently fail if it doesn't work)
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            ...user.user_metadata,
+            last_activity: new Date().toISOString()
+          }
+        })
+      } catch (updateError) {
+        // Don't log this as it's not critical and can be noisy
+      }
+
+      console.log('🔐 Authenticated admin route access:', request.nextUrl.pathname, 'User:', user.email)
+    } catch (e) {
+      console.error('❌ Middleware authentication error:', e)
+      // SECURITY: Redirect to login on any authentication error
+      return NextResponse.redirect(new URL('/login?error=auth_failure', request.url))
     }
   }
 

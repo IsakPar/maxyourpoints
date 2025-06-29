@@ -58,7 +58,7 @@ export default function ArticlePreviewPage() {
                 No article data found for preview. Please go back and try again.
               </p>
               <Button asChild>
-                <Link href="/admin/articles/new">
+                <Link href="/admin/articles/editor">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Editor
                 </Link>

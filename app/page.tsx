@@ -3,7 +3,7 @@ import CTASection from "@/components/CTASection/CTASection"
 import Header from "@/components/Header"
 import BlogShowcase from "@/components/BlogShowcase"
 import BlogCarousel from "@/components/BlogCarousel/BlogCarousel"
-import { getPublishedArticles, getFeaturedArticles } from "@/lib/articles-simple"
+import { getFeaturedArticles } from "@/lib/articles-simple"
 
 // Transform database articles to component format
 function transformToShowcaseFormat(articles: any[]) {
@@ -32,34 +32,25 @@ function transformToCarouselFormat(articles: any[]) {
 }
 
 export default async function Home() {
-  // Fetch data from database with better error handling
-  const [featuredArticlesResult, latestArticlesResult] = await Promise.all([
-    // Only get 3 most recent featured articles for top section
-    getFeaturedArticles('main', 3).catch((error) => {
-      console.log('No featured articles found:', error.message)
-      return []
-    }),
-    // Get 12 most recent articles for the bottom section
-    getPublishedArticles(12, 0).catch((error) => {
-      console.log('No published articles found:', error.message)
-      return { articles: [] }
-    })
-  ])
+  // Optimized: Single API call for all featured articles
+  const featuredArticlesResult = await getFeaturedArticles('main', 12).catch((error) => {
+    console.log('No featured articles found:', error.message)
+    return []
+  })
 
-  // Transform data for components only if we have data
-  // Top section: Up to 3 most recent featured articles
+  // Transform data for components - reuse the same data
   const showcasePosts = featuredArticlesResult.length > 0 
-    ? transformToShowcaseFormat(featuredArticlesResult)
+    ? transformToShowcaseFormat(featuredArticlesResult.slice(0, 3)) // Top 3 for showcase
     : []
   
-  // Bottom section: Last 12 articles (all articles, not just featured)
-  const carouselPosts = latestArticlesResult.articles && latestArticlesResult.articles.length > 0
-    ? transformToCarouselFormat(latestArticlesResult.articles)
+  const carouselPosts = featuredArticlesResult.length > 0
+    ? transformToCarouselFormat(featuredArticlesResult) // All 12 for carousel
     : []
 
   console.log('🏠 Home page data:')
-  console.log('Top featured articles (max 3):', featuredArticlesResult.length)
-  console.log('Recent articles (max 12):', latestArticlesResult.articles?.length || 0)
+  console.log('Total featured articles loaded:', featuredArticlesResult.length)
+  console.log('Showcase articles:', showcasePosts.length)
+  console.log('Carousel articles:', carouselPosts.length)
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50">
@@ -70,8 +61,8 @@ export default async function Home() {
       </div>
       <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
         <BlogCarousel 
-          title="Recent Articles"
-          subtitle="Our latest insights, tips, and travel guides"
+          title="Featured Articles"
+          subtitle="Our handpicked travel insights and expert guides"
           theme="teal"
           autoplay={true}
           posts={carouselPosts}

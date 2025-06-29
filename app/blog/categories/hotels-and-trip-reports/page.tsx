@@ -4,10 +4,11 @@ import * as React from "react"
 import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { getArticlesByCategory } from "@/lib/articles-simple"
+import { getCategoryIdBySlug } from "@/lib/categories"
 import CTASection from "@/components/CTASection/CTASection"
 import CategoryHero from "@/components/blog/CategoryHero"
 import FeaturedPosts from "@/components/blog/FeaturedPosts"
-import HotelBlogGrid from "@/components/blog/HotelBlogGrid"
+import CategoryBlogGrid from "@/components/blog/CategoryBlogGrid"
 
 
 
@@ -48,7 +49,7 @@ function HotelsContent() {
   const [hotelPosts, setHotelPosts] = React.useState<any[]>([])
   
   // Get filter parameter from URL
-  const filterParam = searchParams.get('filter')
+  const filterParam = searchParams?.get('filter') || null
 
   // Scroll to toggle section if filter parameter is present
   React.useEffect(() => {
@@ -121,7 +122,11 @@ function HotelsContent() {
         <div className="my-8 rounded-2xl">
           <CTASection />
         </div>
-        <HotelBlogGrid posts={hotelPosts} initialFilter={filterParam} />
+        <CategoryBlogGrid 
+          posts={hotelPosts} 
+          categoryId={getCategoryIdBySlug('hotels-and-trip-reports') || 'f4874537-f296-4b1f-a8c1-464a23909f62'}
+          initialFilter={filterParam} 
+        />
       </div>
     </main>
   )

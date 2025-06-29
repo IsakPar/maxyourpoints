@@ -9,6 +9,7 @@ import Script from "next/script"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from 'react-hot-toast'
+import { PERFORMANCE_HINTS, CRITICAL_CSS } from "@/lib/performance"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -102,20 +103,42 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/max_your_points_favicon.png" />
         <link rel="shortcut icon" href="/max_your_points_favicon.png" />
         
-        {/* Preload critical resources */}
-        <link
-          rel="preload"
-          href="/aircraft-landing.jpg"
-          as="image"
-          type="image/jpeg"
-        />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Inline critical CSS for instant render */}
+        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
+        
+        {/* Preconnect for critical resources */}
+        {PERFORMANCE_HINTS.PRECONNECT.map((url) => (
+          <link key={url} rel="preconnect" href={url} crossOrigin="" />
+        ))}
         
         {/* DNS prefetch for external domains */}
-        <link rel="dns-prefetch" href="//vercel.live" />
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        {PERFORMANCE_HINTS.DNS_PREFETCH.map((url) => (
+          <link key={url} rel="dns-prefetch" href={url} />
+        ))}
+        
+        {/* Preload critical resources */}
+        {PERFORMANCE_HINTS.PRELOAD.images.map((src) => (
+          <link key={src} rel="preload" href={src} as="image" />
+        ))}
+        
+        {/* Optimized font loading */}
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" 
+          rel="stylesheet" 
+          media="print" 
+        />
+        <Script
+          id="font-loader"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var link = document.querySelector('link[media="print"]');
+                if(link) link.media = 'all';
+              })();
+            `
+          }}
+        />
         
         <Script
           id="website-schema"
@@ -140,36 +163,28 @@ export default function RootLayout({
         <Toaster position="bottom-right" />
         
         
-        {/* Load non-critical scripts after page load */}
+        {/* Minimal performance monitoring */}
         <Script
-          id="performance-observer"
+          id="performance-monitor"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              // Observe and log performance metrics
-              if ('PerformanceObserver' in window) {
-                try {
-                  const observer = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                      if (entry.entryType === 'largest-contentful-paint') {
-                        console.log('LCP:', entry.startTime);
-                      }
-                      if (entry.entryType === 'first-input') {
-                        console.log('FID:', entry.processingStart - entry.startTime);
-                      }
-                    }
-                  });
-                  observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input'] });
-                } catch (e) {
-                  console.log('Performance observer not supported');
-                }
-              }
+              // Resource prioritization only
+              const prioritizeResources = () => {
+                document.querySelectorAll('img[data-priority="high"]').forEach(img => {
+                  img.loading = 'eager';
+                  img.fetchpriority = 'high';
+                });
+                document.querySelectorAll('img:not([data-priority="high"])').forEach(img => {
+                  img.loading = 'lazy';
+                  img.decoding = 'async';
+                });
+              };
               
-              // Reduce main thread blocking
-              if ('scheduler' in window && 'postTask' in window.scheduler) {
-                window.scheduler.postTask(() => {
-                  // Defer non-critical operations
-                }, { priority: 'background' });
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', prioritizeResources);
+              } else {
+                prioritizeResources();
               }
             `
           }}

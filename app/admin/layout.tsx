@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/lib/auth'
+import { requireCMSAccess } from '@/lib/auth'
 import AdminNavbar from './components/AdminNavbar'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { Toaster } from 'sonner'
@@ -9,19 +9,30 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Check authentication using Supabase Auth
-  const user = await getAuthUser()
-
-  // If no user or not admin/super_admin, redirect to login
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+  // PHASE 1: Authentication check - now properly handles session timeout
+  let user
+  
+  try {
+    user = await requireCMSAccess()
+  } catch (error) {
+    console.log('❌ Admin layout: Authentication failed, redirecting to login')
     redirect('/login?error=unauthorized')
   }
 
   return (
     <ToastProvider>
       <div className="min-h-screen bg-gray-50">
+        {/* Admin-specific layout with clear separation */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <span>Admin Portal - Max Your Points CMS</span>
+            </div>
+          </div>
+        </div>
         <AdminNavbar user={user} />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-12">
           {children}
         </main>
         <Toaster 

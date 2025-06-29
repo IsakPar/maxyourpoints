@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { CheckCircle, AlertCircle } from "lucide-react"
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ArrowRight, CheckCircle, Mail } from 'lucide-react'
 import Link from "next/link"
 import { SubscriptionSuccess } from "@/components/blog/SubscriptionSuccess"
 

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, Plus, Eye, Edit, Calendar, User, Star, Clock, Loader2, AlertCircle, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -13,12 +14,14 @@ export default function ArticlesPage() {
   const [articlesData, setArticlesData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('all')
 
   const fetchArticles = async () => {
     try {
       setLoading(true)
       setError(null)
-      const response = await api.getArticles({ published: false }) // Get all articles including drafts
+      // Get ALL articles regardless of status for admin management
+      const response = await api.getArticles({}) 
       setArticlesData(response.articles || [])
     } catch (err: any) {
       console.error('Failed to fetch articles:', err)
@@ -55,6 +58,23 @@ export default function ArticlesPage() {
     featuredMain: articlesData.filter(a => a.featured_main).length,
     featuredCategory: articlesData.filter(a => a.featured_category).length,
   }
+
+  // Filter articles based on active tab
+  const getFilteredArticles = () => {
+    switch (activeTab) {
+      case 'published':
+        return articlesData.filter(a => a.status === 'published')
+      case 'drafts':
+        return articlesData.filter(a => a.status === 'draft')
+      case 'scheduled':
+        return articlesData.filter(a => a.status === 'scheduled')
+      case 'all':
+      default:
+        return articlesData
+    }
+  }
+
+  const filteredArticles = getFilteredArticles()
 
   const getStatusBadge = (status: string, publishedAt: string) => {
     switch (status) {
@@ -105,7 +125,7 @@ export default function ArticlesPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/articles/new">
+          <Link href="/admin/articles/editor">
             <Plus className="w-4 h-4 mr-2" />
             New Article
           </Link>
@@ -193,18 +213,39 @@ export default function ArticlesPage() {
         </Card>
       </div>
 
-      {/* Articles List */}
+      {/* Articles List with Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle>All Articles</CardTitle>
+          <CardTitle>Manage Articles</CardTitle>
           <CardDescription>
-            Manage and edit your blog content
+            View and edit your blog content by status
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {articlesData.length > 0 ? (
-            <div className="space-y-4">
-              {articlesData.map((article) => (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all" className="flex items-center space-x-2">
+                <FileText className="w-4 h-4" />
+                <span>All ({stats.total})</span>
+              </TabsTrigger>
+              <TabsTrigger value="published" className="flex items-center space-x-2">
+                <Eye className="w-4 h-4" />
+                <span>Published ({stats.published})</span>
+              </TabsTrigger>
+              <TabsTrigger value="drafts" className="flex items-center space-x-2">
+                <Edit className="w-4 h-4" />
+                <span>Drafts ({stats.draft})</span>
+              </TabsTrigger>
+              <TabsTrigger value="scheduled" className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Scheduled ({stats.scheduled})</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab} className="space-y-4">
+              {filteredArticles.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredArticles.map((article) => (
                 <div
                   key={article.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
@@ -266,7 +307,7 @@ export default function ArticlesPage() {
                   </div>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/admin/articles/${article.id}`}>
+                      <Link href={`/admin/articles/editor?id=${article.id}`}>
                         <Edit className="w-4 h-4" />
                       </Link>
                     </Button>
@@ -285,25 +326,32 @@ export default function ArticlesPage() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No articles yet</h3>
-              <p className="text-gray-600 mb-6">
-                Get started by creating your first blog post
-              </p>
-              <Button asChild>
-                <Link href="/admin/articles/new">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Article
-                </Link>
-              </Button>
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {activeTab === 'all' ? 'No articles yet' : `No ${activeTab} articles`}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {activeTab === 'all' ? 'Get started by creating your first blog post' : 
+                   `No articles found with ${activeTab} status`}
+                </p>
+                {activeTab === 'all' && (
+                  <Button asChild>
+                    <Link href="/admin/articles/editor">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create First Article
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

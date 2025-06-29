@@ -1,22 +1,58 @@
 import { NextResponse } from 'next/server'
-// Backend API handles newsletter subscribers directly
+import { supabaseAdmin } from '@/lib/supabase/server'
+import { verifyAuthUser } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log('📧 Admin fetching newsletter subscribers - backend integration pending')
-    
-    // Placeholder: Will connect to backend API
-    const subscribers: any[] = []
+    // Verify admin access
+    const user = await verifyAuthUser(request)
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
 
-    console.log(`✅ Successfully fetched ${subscribers.length} subscribers`)
+    console.log('📧 Admin fetching newsletter subscribers from database')
+    
+    // Fetch subscribers from database
+    const { data: subscribers, error } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('❌ Newsletter subscribers fetch error:', error)
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Failed to fetch subscribers'
+        },
+        { status: 500 }
+      )
+    }
+
+    // Map database fields to expected UI format
+    const formattedSubscribers = subscribers?.map(sub => ({
+      id: sub.id,
+      email: sub.email,
+      status: sub.status === 'active' ? 'confirmed' : 
+              sub.status === 'unsubscribed' ? 'unsubscribed' : 'pending',
+      subscribed_at: sub.subscribed_at,
+      unsubscribed_at: sub.unsubscribed_at,
+      source: sub.source || 'website',
+      created_at: sub.created_at
+    })) || []
+
+    console.log(`✅ Successfully fetched ${formattedSubscribers.length} subscribers`)
     
     return NextResponse.json({ 
       success: true,
-      subscribers: subscribers
+      subscribers: formattedSubscribers
     })
 
   } catch (error) {
-    console.error('❌ Newsletter subscribers fetch error:', error)
+    console.error('❌ Newsletter subscribers API error:', error)
     return NextResponse.json(
       { 
         success: false,

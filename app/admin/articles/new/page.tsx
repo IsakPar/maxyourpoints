@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-// Removed Supabase - using backend API
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,14 +11,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Save, Eye, Upload, Calendar, Star, Settings, Tag, AlertCircle, Clock, Image as ImageIcon, Globe, Search } from 'lucide-react'
+import { ArrowLeft, Save, Eye, Loader2, AlertCircle, X, Upload, Calendar, Star } from 'lucide-react'
 import Link from 'next/link'
-import SimpleDynamicEditor from '@/components/ui/simple-dynamic-editor'
+import AdvancedSEOCalculator from '../../components/AdvancedSEOCalculator'
 import ImageUpload from '../../components/ImageUpload'
-import { useToast } from '@/components/ui/use-toast'
-import { api } from '@/lib/api'
+import SemanticAnalyzer from '../../components/SemanticAnalyzer'
+import { useToast } from '@/components/ui/toast-provider'
 
 interface Category {
   id: string
@@ -41,137 +41,167 @@ interface Article {
   slug: string
 }
 
-export default function NewArticlePageWordPressStyle() {
-  const router = useRouter()
-  const { toast } = useToast()
-  // Using backend API instead of Supabase
-
-  // Content state
+export default function NewArticlePage() {
+  // Content Tab State
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
   const [summary, setSummary] = useState('')
-  
-  // Categorization
   const [categoryId, setCategoryId] = useState('')
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([])
-  const [tags, setTags] = useState<string[]>([])
-  const [newTag, setNewTag] = useState('')
-  
-  // Media
   const [heroImageUrl, setHeroImageUrl] = useState('')
   const [heroImageAlt, setHeroImageAlt] = useState('')
-  
-  // Author & metadata
-  const [authorName, setAuthorName] = useState('Max Your Points Team')
-  const [readingTime, setReadingTime] = useState(1)
-  
-  // SEO
+  const [content, setContent] = useState('')
+
+  // SEO Tab State
   const [metaDescription, setMetaDescription] = useState('')
   const [focusKeyword, setFocusKeyword] = useState('')
+  const [seoScore, setSeoScore] = useState(0)
+
+  // Tags Tab State
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [relatedArticles, setRelatedArticles] = useState<string[]>([])
+
+  // Settings Tab State
   const [slug, setSlug] = useState('')
-  
-  // Features
+  const [publishedAt, setPublishedAt] = useState('')
+  const [status, setStatus] = useState<'draft' | 'published' | 'scheduled'>('draft')
   const [featuredMain, setFeaturedMain] = useState(false)
   const [featuredCategory, setFeaturedCategory] = useState(false)
-  const [trendingScore, setTrendingScore] = useState(0)
   
-  // Related articles
-  const [selectedRelatedArticles, setSelectedRelatedArticles] = useState<string[]>([])
+  // Author State
+  const [authorName, setAuthorName] = useState('Isak Parild')
+  const [authorBio, setAuthorBio] = useState('')
+  const [authorAvatar, setAuthorAvatar] = useState('')
   
+  // Auto-calculated fields
+  const [readingTime, setReadingTime] = useState(0)
+
+  // UI State
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('content')
+
   // Data
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
-  const [articles, setArticles] = useState<Article[]>([])
+  const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([])
+  const [availableArticles, setAvailableArticles] = useState<Article[]>([])
   
-  // UI state
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [showMediaLibrary, setShowMediaLibrary] = useState(false)
-  // Media library state
-  const [mediaImages, setMediaImages] = useState<any[]>([])
-  const [mediaLoading, setMediaLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  
-  // Editor image insertion function
-  const [editorInsertImageFn, setEditorInsertImageFn] = useState<((imageUrl: string, altText: string) => void) | null>(null)
+  const router = useRouter()
+  const supabase = createClient()
+  const { showToast } = useToast()
 
-  // Load initial data
+  // Load data on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('Loading data from backend API...')
-        
-        // Load categories using API client
-        const categoriesData = await api.getCategories()
-        setCategories(categoriesData.categories || [])
+        const [categoriesRes, subcategoriesRes, articlesRes] = await Promise.all([
+          supabase.from('categories').select('*').order('name'),
+          // supabase.from('subcategories').select('*').order('name'), // Table doesn't exist yet
+          Promise.resolve({ data: [] }), // Mock empty subcategories for now
+          supabase.from('articles').select('id, title, slug').eq('status', 'published').order('title')
+        ])
 
-        // Load subcategories using direct fetch (as api client doesn't have this method yet)
-        const subcategoriesResponse = await fetch('/api/admin/subcategories')
-        if (subcategoriesResponse.ok) {
-          const subcategoriesData = await subcategoriesResponse.json()
-          setSubcategories(subcategoriesData.subcategories || [])
-        }
-
-        // Load articles for related articles selection using API client
-        const articlesData = await api.getArticles({ limit: 50 })
-        setArticles(articlesData.articles || [])
-
+        if (categoriesRes.data) setCategories(categoriesRes.data)
+        if (subcategoriesRes.data) setSubcategories(subcategoriesRes.data)
+        if (articlesRes.data) setAvailableArticles(articlesRes.data)
       } catch (err) {
         console.error('Error loading data:', err)
-        toast({
-          title: 'Loading Error',
-          description: 'Failed to load categories and data. Please refresh the page.',
-          variant: 'destructive'
-        })
-      } finally {
-        setIsLoading(false)
       }
     }
 
     loadData()
-  }, [])
+  }, [supabase])
+
+  // Filter subcategories based on selected category
+  useEffect(() => {
+    if (categoryId) {
+      const filtered = subcategories.filter(sub => sub.category_id === categoryId)
+      setFilteredSubcategories(filtered)
+      // Reset subcategories if they don't belong to the new category
+      setSelectedSubcategories(prev => 
+        prev.filter(subId => filtered.find(sub => sub.id === subId))
+      )
+    } else {
+      setFilteredSubcategories([])
+      setSelectedSubcategories([])
+    }
+  }, [categoryId, subcategories])
 
   // Auto-generate slug from title
   useEffect(() => {
     if (title && !slug) {
-      const autoSlug = title
+      const generatedSlug = title
         .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .trim()
-      setSlug(autoSlug)
+        .replace(/[^\w ]+/g, '')
+        .replace(/ +/g, '-')
+      setSlug(generatedSlug)
     }
   }, [title, slug])
 
-  // Calculate reading time
+  // Calculate reading time automatically
   useEffect(() => {
-    const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length
-    const time = Math.max(1, Math.ceil(wordCount / 200))
-    setReadingTime(time)
+    const calculateReadingTime = () => {
+      // Remove HTML tags and count words
+      const textContent = content.replace(/<[^>]*>/g, '').trim()
+      const wordCount = textContent.split(/\s+/).filter(word => word.length > 0).length
+      
+      // Average reading speed is 225 words per minute
+      const readingTimeMinutes = Math.ceil(wordCount / 225)
+      return Math.max(1, readingTimeMinutes) // Minimum 1 minute
+    }
+
+    if (content.trim()) {
+      setReadingTime(calculateReadingTime())
+    } else {
+      setReadingTime(1)
+    }
   }, [content])
 
-  // Auto-generate meta description from summary
+  // Calculate SEO score
   useEffect(() => {
-    if (summary && !metaDescription) {
-      setMetaDescription(summary.slice(0, 160))
+    const calculateSEOScore = () => {
+      let score = 0
+      
+      // Title optimization (25 points)
+      if (title.toLowerCase().includes(focusKeyword.toLowerCase())) score += 15
+      if (title.length >= 30 && title.length <= 60) score += 10
+      
+      // Meta description optimization (25 points)
+      if (metaDescription.toLowerCase().includes(focusKeyword.toLowerCase())) score += 15
+      if (metaDescription.length >= 120 && metaDescription.length <= 160) score += 10
+      
+      // Content optimization (30 points)
+      const contentWords = content.split(/\s+/).length
+      if (contentWords >= 300) score += 15
+      
+      const keywordDensity = (content.toLowerCase().split(focusKeyword.toLowerCase()).length - 1) / contentWords * 100
+      if (keywordDensity >= 0.5 && keywordDensity <= 2.5) score += 15
+      
+      // URL optimization (10 points)
+      if (slug.toLowerCase().includes(focusKeyword.toLowerCase())) score += 10
+      
+      // Image optimization (10 points)
+      if (heroImageAlt.toLowerCase().includes(focusKeyword.toLowerCase())) score += 10
+      
+      return Math.min(score, 100)
     }
-  }, [summary, metaDescription])
 
-  const filteredSubcategories = subcategories.filter(sub => sub.category_id === categoryId)
-  
-  // Debug logging
-  console.log('🔍 Debug subcategories:', {
-    categoryId,
-    subcategories: subcategories.length,
-    filteredSubcategories: filteredSubcategories.length,
-    filtered: filteredSubcategories
-  })
+    if (focusKeyword) {
+      setSeoScore(calculateSEOScore())
+    }
+  }, [title, metaDescription, content, focusKeyword, slug, heroImageAlt])
 
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()])
-      setNewTag('')
+  // Handle tag input
+  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const tag = tagInput.trim()
+      if (tag && !tags.includes(tag)) {
+        setTags([...tags, tag])
+        setTagInput('')
+      }
     }
   }
 
@@ -179,39 +209,48 @@ export default function NewArticlePageWordPressStyle() {
     setTags(tags.filter(tag => tag !== tagToRemove))
   }
 
-  // Load media images
-  const loadMediaImages = async () => {
-    setMediaLoading(true)
-    try {
-      const response = await fetch('/api/admin/images')
-      if (response.ok) {
-        const data = await response.json()
-        setMediaImages(data.images || [])
-      } else {
-        console.error('Failed to load media images')
-        setMediaImages([])
+  // Handle subcategory selection
+  const toggleSubcategory = (subcategoryId: string) => {
+    setSelectedSubcategories(prev => {
+      if (prev.includes(subcategoryId)) {
+        return prev.filter(id => id !== subcategoryId)
+      } else if (prev.length < 4) { // Max 4 subcategories
+        return [...prev, subcategoryId]
       }
-    } catch (err) {
-      console.error('Failed to load media:', err)
-      setMediaImages([])
-    } finally {
-      setMediaLoading(false)
+      return prev
+    })
+  }
+
+  // Handle related articles
+  const toggleRelatedArticle = (articleId: string) => {
+    setRelatedArticles(prev => {
+      if (prev.includes(articleId)) {
+        return prev.filter(id => id !== articleId)
+      } else if (prev.length < 5) { // Max 5 related articles
+        return [...prev, articleId]
+      }
+      return prev
+    })
+  }
+
+  // Save as draft
+  const handleSaveDraft = async () => {
+    await handleSave('draft')
+  }
+
+  // Publish immediately
+  const handlePublish = async () => {
+    await handleSave('published')
+  }
+
+  // Schedule publication
+  const handleSchedule = async () => {
+    if (!publishedAt) {
+      setError('Please select a publication date and time')
+      return
     }
+    await handleSave('scheduled')
   }
-
-  // Filter images based on search term
-  const filteredImages = mediaImages.filter(image => 
-    image.alt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    image.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
-
-  const selectHeroImage = (imageUrl: string, imageAlt: string) => {
-    setHeroImageUrl(imageUrl)
-    setHeroImageAlt(imageAlt)
-    setShowMediaLibrary(false)
-  }
-
-
 
   // Preview functionality
   const handlePreview = () => {
@@ -224,12 +263,12 @@ export default function NewArticlePageWordPressStyle() {
       hero_image_alt: heroImageAlt || null,
       category: categories.find(c => c.id === categoryId)?.name || 'Uncategorized',
       tags: tags,
-      author: authorName || 'Max Your Points Team',
+      author: authorName || 'Isak Parild',
+      author_bio: authorBio,
+      author_avatar: authorAvatar,
       date: new Date().toLocaleDateString(),
-      readTime: readingTime + ' min read'
+      readTime: `${readingTime} min read`
     }
-    
-    console.log('🔍 Preview data:', previewData)
     
     // Store preview data in sessionStorage
     sessionStorage.setItem('articlePreview', JSON.stringify(previewData))
@@ -238,601 +277,744 @@ export default function NewArticlePageWordPressStyle() {
     window.open('/admin/articles/preview', '_blank')
   }
 
+  // Main save function
   const handleSave = async (saveStatus: 'draft' | 'published' | 'scheduled') => {
-    setIsSaving(true)
+    if (saveStatus === 'draft') {
+      setIsSaving(true)
+    } else {
+      setIsLoading(true)
+    }
     setError('')
 
     try {
-      // Validation
+      // Validation with detailed feedback
       const errors: string[] = []
+      
+      // Basic validation (always required)
       if (!title.trim()) errors.push('Title')
       if (!summary.trim()) errors.push('Summary')
       if (!content.trim()) errors.push('Content')
       if (!categoryId) errors.push('Category')
-      if (!heroImageUrl.trim()) errors.push('Hero Image')
-      if (!heroImageAlt.trim()) errors.push('Hero Image Alt Text')
-
-      if (saveStatus === 'published') {
-        if (!metaDescription.trim()) errors.push('Meta Description')
-        if (!focusKeyword.trim()) errors.push('Focus Keyword')
+      
+      // Publication validation (required for publish/schedule)
+      if (saveStatus !== 'draft') {
+        if (!metaDescription.trim()) errors.push('Meta Description (SEO tab)')
+        if (!focusKeyword.trim()) errors.push('Focus Keyword (SEO tab)')
+        if (!heroImageUrl.trim()) errors.push('Hero Image')
+        if (!heroImageAlt.trim()) errors.push('Hero Image Alt Text')
       }
-
+      
       if (errors.length > 0) {
         const errorMessage = `The following fields are required: ${errors.join(', ')}`
-        toast({
+        showToast({
           title: 'Validation Error',
           description: errorMessage,
-          variant: 'destructive'
+          variant: 'error'
         })
         throw new Error(errorMessage)
       }
 
-      const finalPublishDate = saveStatus === 'published' ? new Date() : null
-
-      // Save article
+      // Prepare article data
       const articleData = {
         title: title.trim(),
-        slug: slug || title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+        slug: slug.trim() || title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-'),
         summary: summary.trim(),
         content: content.trim(),
-        status: saveStatus,
-        published_at: finalPublishDate ? finalPublishDate.toISOString() : null,
+        hero_image_url: heroImageUrl.trim() || null,
+        hero_image_alt: heroImageAlt.trim() || null,
         category_id: categoryId,
-        hero_image_url: heroImageUrl.trim(),
-        hero_image_alt: heroImageAlt.trim(),
         meta_description: metaDescription.trim(),
         focus_keyword: focusKeyword.trim(),
+        seo_score: seoScore,
+        tags: tags,
+        status: saveStatus,
+        published_at: saveStatus === 'scheduled' ? publishedAt : (saveStatus === 'published' ? new Date().toISOString() : null),
         featured_main: featuredMain,
         featured_category: featuredCategory,
-        tags: tags.length > 0 ? tags : []
+        featured: featuredMain || featuredCategory, // Backward compatibility
+        author_name: authorName.trim() || 'Isak Parild',
+        author_bio: authorBio.trim() || null,
+        author_avatar: authorAvatar.trim() || null,
+        reading_time: readingTime
       }
 
-      console.log('Saving article to backend:', articleData)
-      
-      // Use real API call instead of mock
-      const articleResult = await api.createArticle(articleData)
-      
-      if (!articleResult) throw new Error('Failed to create article')
+      // Insert article
+      const { data: articleResult, error: articleError } = await supabase
+        .from('articles')
+        .insert(articleData)
+        .select()
+        .single()
 
-      const articleId = articleResult.article?.id || articleResult.id
+      if (articleError) throw articleError
 
-      // Note: Subcategories and related articles will be implemented later
-      // For now, we focus on basic article creation
+      // Insert subcategories (temporarily disabled - table doesn't exist yet)
+      // if (selectedSubcategories.length > 0) {
+      //   const subcategoryData = selectedSubcategories.map(subId => ({
+      //     article_id: articleResult.id,
+      //     subcategory_id: subId
+      //   }))
+
+      //   const { error: subError } = await supabase
+      //     .from('article_subcategories')
+      //     .insert(subcategoryData)
+
+      //   if (subError) throw subError
+      // }
+
+      // Insert related articles (temporarily disabled - table doesn't exist yet)
+      // if (relatedArticles.length > 0) {
+      //   const relatedData = relatedArticles.map(relatedId => ({
+      //     article_id: articleResult.id,
+      //     related_article_id: relatedId
+      //   }))
+
+      //   const { error: relatedError } = await supabase
+      //     .from('article_relations')
+      //     .insert(relatedData)
+
+      //   if (relatedError) throw relatedError
+      // }
+
+      // Success - show success message and redirect
+      const statusText = saveStatus === 'published' ? 'published' : saveStatus === 'scheduled' ? 'scheduled' : 'saved as draft'
       
-      const statusMessages = {
-        draft: 'Article saved as draft',
-        published: 'Article published successfully!',
-        scheduled: 'Article scheduled successfully!'
-      }
-
-      toast({
-        title: 'Success',
-        description: statusMessages[saveStatus],
-        variant: 'default'
+      showToast({
+        title: 'Success!',
+        description: `Article "${title}" has been ${statusText} successfully.`,
+        variant: 'success'
       })
-
-      router.push('/admin/articles')
-
+      
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        router.push('/admin/articles')
+      }, 1500)
+      
     } catch (err: any) {
       console.error('Article save error:', err)
       const errorMessage = err.message || 'An unexpected error occurred'
       setError(errorMessage)
-      toast({
+      
+      showToast({
         title: 'Error',
         description: `Failed to save article: ${errorMessage}`,
-        variant: 'destructive'
+        variant: 'error'
       })
     } finally {
+      setIsLoading(false)
       setIsSaving(false)
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* WordPress-style Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/articles">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  All Articles
-                </Link>
-              </Button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-lg font-semibold text-gray-900">Add New Article</h1>
-              {title && (
-                <>
-                  <div className="h-6 w-px bg-gray-300"></div>
-                  <span className="text-sm text-gray-500 truncate max-w-xs">{title}</span>
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePreview}
-                disabled={!title || !content}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleSave('draft')}
-                disabled={isSaving}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Draft
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleSave('published')}
-                disabled={isSaving}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isSaving ? 'Publishing...' : 'Publish'}
-              </Button>
-            </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/admin/articles">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Articles
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">New Article</h1>
+            <p className="text-gray-600 mt-2">
+              Create a new blog post following the CMS structure
+            </p>
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Main Content Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Title Input */}
-            <div>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Add title"
-                className="text-2xl font-bold border-none shadow-none p-0 h-auto placeholder:text-gray-400 focus:ring-0"
-                style={{ fontSize: '2rem', lineHeight: '2.5rem' }}
-              />
-            </div>
-
-            {/* Permalink */}
-            {slug && (
-              <div className="flex items-center text-sm text-gray-500">
-                <Globe className="w-4 h-4 mr-1" />
-                <span>Permalink: </span>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  className="ml-2 text-blue-600 border-none shadow-none p-0 h-auto focus:ring-0 bg-transparent"
-                />
-              </div>
+      {/* Main Content with Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="content" className="relative">
+            Content
+            {(!title.trim() || !summary.trim() || !content.trim() || !categoryId || !heroImageUrl.trim() || !heroImageAlt.trim()) && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="semantic">Semantic</TabsTrigger>
+          <TabsTrigger value="seo" className="relative">
+            SEO & Metadata
+            {(!metaDescription.trim() || !focusKeyword.trim()) && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="tags">Tags & Links</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-            {/* Media Buttons */}
-            <div className="flex gap-2 items-center p-2 bg-gray-50 rounded-lg border">
-              <span className="text-sm font-medium text-gray-600">Media:</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => window.open('/admin/media', '_blank')}
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                Upload
-              </Button>
-
-              <Dialog open={showMediaLibrary} onOpenChange={setShowMediaLibrary}>
-                <DialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowMediaLibrary(true)
-                      loadMediaImages()
-                    }}
-                  >
-                    <Star className="h-4 w-4 mr-1" />
-                    {heroImageUrl ? 'Change Hero Image' : 'Set Hero Image'}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden">
-                  <DialogHeader>
-                    <DialogTitle>Select Hero Image</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {/* Search */}
-                    <div className="flex gap-2">
-                      <Input
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search by name or tags..."
-                        className="flex-1"
-                      />
-                      <Button variant="outline" onClick={loadMediaImages}>
-                        <Search className="h-4 w-4 mr-1" />
-                        Search
-                      </Button>
-                    </div>
-
-                    {/* Current Hero Image */}
-                    {heroImageUrl && (
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <Label className="text-sm font-medium text-blue-800">Current Hero Image:</Label>
-                        <div className="mt-2 flex gap-4 items-start">
-                          <img src={heroImageUrl} alt="Current hero" className="w-32 h-24 object-cover rounded border" />
-                          <div className="flex-1 space-y-2">
-                            <Input
-                              value={heroImageAlt}
-                              onChange={(e) => setHeroImageAlt(e.target.value)}
-                              placeholder="Alt text for accessibility..."
-                              className="bg-white"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => selectHeroImage('', '')}
-                            >
-                              Remove Hero Image
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image Gallery */}
-                    <div className="max-h-96 overflow-y-auto">
-                      {mediaLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                          <span className="ml-2">Loading images...</span>
-                        </div>
-                      ) : filteredImages.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {filteredImages.map((image) => (
-                            <div
-                              key={image.id}
-                              className="cursor-pointer group relative border rounded-lg overflow-hidden hover:border-blue-500 transition-colors"
-                              onClick={() => selectHeroImage(image.url, image.alt)}
-                            >
-                              <img
-                                src={image.url}
-                                alt={image.alt}
-                                className="w-full h-32 object-cover group-hover:scale-105 transition-transform"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity" />
-                              <div className="p-2">
-                                <p className="text-xs font-medium truncate">{image.alt}</p>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {image.tags.map((tag: string, index: number) => (
-                                    <span
-                                      key={index}
-                                      className="text-xs bg-gray-100 text-gray-600 px-1 py-0.5 rounded"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          {searchTerm ? 'No images found matching your search.' : 'No images available.'}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Manual URL Input */}
-                    <div className="border-t pt-4">
-                      <Label className="text-sm font-medium">Or enter image URL manually:</Label>
-                      <div className="flex gap-2 mt-2">
-                        <Input
-                          placeholder="Paste image URL..."
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const url = (e.target as HTMLInputElement).value
-                              if (url) {
-                                selectHeroImage(url, 'Image from URL')
-                              }
-                            }
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open('/admin/media', '_blank')}
-                        >
-                          Open Media Library
-                        </Button>
-                      </div>
-                    </div>
+        {/* Content Tab */}
+        <TabsContent value="content" className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <div className="xl:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Article Content</CardTitle>
+                  <CardDescription>
+                    Main content and categorization
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="The main title of your article"
+                      className="mt-1"
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
 
+                  <div>
+                    <Label htmlFor="summary">Summary *</Label>
+                    <Textarea
+                      id="summary"
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      placeholder="Brief summary of the article (max 200 characters)"
+                      className="mt-1"
+                      rows={3}
+                      maxLength={200}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {summary.length}/200 characters
+                    </p>
+                  </div>
 
+                  <div>
+                    <Label htmlFor="content">Content *</Label>
+                    <Textarea
+                      id="content"
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="Start writing your article content in Markdown format..."
+                      className="mt-1 min-h-[500px] font-mono"
+                      rows={20}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      You can use Markdown formatting (e.g., **bold**, *italic*, # headers, etc.)
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Main Editor */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <SimpleDynamicEditor
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category & Subcategories</CardTitle>
+                  <CardDescription>
+                    Primary category and up to 4 subcategories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select primary category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {filteredSubcategories.length > 0 && (
+                    <div>
+                      <Label>Subcategories (max 4)</Label>
+                      <div className="mt-2 space-y-2">
+                        {filteredSubcategories.map((subcategory) => (
+                          <div key={subcategory.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`sub-${subcategory.id}`}
+                              checked={selectedSubcategories.includes(subcategory.id)}
+                              onChange={() => toggleSubcategory(subcategory.id)}
+                              disabled={!selectedSubcategories.includes(subcategory.id) && selectedSubcategories.length >= 4}
+                              className="rounded"
+                            />
+                            <Label 
+                              htmlFor={`sub-${subcategory.id}`}
+                              className="text-sm"
+                            >
+                              {subcategory.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {selectedSubcategories.length}/4 selected
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hero Image</CardTitle>
+                  <CardDescription>
+                    Main image for the article - upload directly to storage
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    value={heroImageUrl}
+                    onChange={setHeroImageUrl}
+                    onAltChange={setHeroImageAlt}
+                    altValue={heroImageAlt}
+                    label="Upload Image *"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Author Information</CardTitle>
+                  <CardDescription>
+                    Author details and reading time ({readingTime} min read)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="authorName">Author Name</Label>
+                    <Input
+                      id="authorName"
+                      value={authorName}
+                      onChange={(e) => setAuthorName(e.target.value)}
+                      placeholder="Article author name"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="authorBio">Author Bio (optional)</Label>
+                    <Textarea
+                      id="authorBio"
+                      value={authorBio}
+                      onChange={(e) => setAuthorBio(e.target.value)}
+                      placeholder="Short bio about the author"
+                      className="mt-1"
+                      rows={2}
+                      maxLength={150}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {authorBio.length}/150 characters
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="authorAvatar">Author Avatar URL (optional)</Label>
+                    <Input
+                      id="authorAvatar"
+                      value={authorAvatar}
+                      onChange={(e) => setAuthorAvatar(e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                    <strong>Reading Time:</strong> {readingTime} minute{readingTime !== 1 ? 's' : ''} 
+                    <br />
+                    <span className="text-xs">
+                      (Automatically calculated from content)
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <AdvancedSEOCalculator
                 content={content}
-                onChange={setContent}
-                onInsertImage={setEditorInsertImageFn}
-                placeholder="Start writing your article..."
-                className="border-none"
+                metadata={{
+                  title,
+                  metaDescription,
+                  slug,
+                  focusKeyword,
+                  heroImageUrl,
+                  heroImageAlt
+                }}
+                onScoreChange={setSeoScore}
               />
             </div>
+          </div>
+        </TabsContent>
 
-            {/* Summary */}
+        {/* Semantic Analysis Tab */}
+        <TabsContent value="semantic" className="space-y-6">
+          <SemanticAnalyzer 
+            content={content}
+            onContentChange={setContent}
+          />
+        </TabsContent>
+
+        {/* SEO Tab */}
+        <TabsContent value="seo" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>SEO Optimization</CardTitle>
+                  <CardDescription>
+                    Search engine optimization and metadata
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="focusKeyword">Focus Keyword *</Label>
+                    <Input
+                      id="focusKeyword"
+                      value={focusKeyword}
+                      onChange={(e) => setFocusKeyword(e.target.value)}
+                      placeholder="Primary keyword for SEO optimization"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="metaDescription">Meta Description *</Label>
+                    <Textarea
+                      id="metaDescription"
+                      value={metaDescription}
+                      onChange={(e) => setMetaDescription(e.target.value)}
+                      placeholder="SEO meta description (50-160 characters)"
+                      className="mt-1"
+                      rows={3}
+                      minLength={50}
+                      maxLength={160}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {metaDescription.length}/160 characters
+                      {metaDescription.length < 50 && metaDescription.length > 0 && (
+                        <span className="text-orange-600 ml-2">Too short (min 50)</span>
+                      )}
+                      {metaDescription.length >= 50 && metaDescription.length <= 160 && metaDescription.length > 0 && (
+                        <span className="text-green-600 ml-2">Good length</span>
+                      )}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <AdvancedSEOCalculator
+                content={content}
+                metadata={{
+                  title,
+                  metaDescription,
+                  slug,
+                  focusKeyword,
+                  heroImageUrl,
+                  heroImageAlt
+                }}
+                onScoreChange={setSeoScore}
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tags & Links Tab */}
+        <TabsContent value="tags" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Summary</CardTitle>
+                <CardTitle>Tags</CardTitle>
                 <CardDescription>
-                  Brief description that appears in article previews and search results
+                  Tags for categorizing and finding articles
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Write a compelling summary of your article..."
-                  rows={3}
-                  maxLength={200}
-                  className="resize-none"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-gray-500">{summary.length}/200 characters</span>
-                  <span className="text-xs text-gray-400">Used for previews and meta description</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            
-            {/* Publish Box */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Publish</CardTitle>
-                  <div className="flex items-center space-x-1 text-sm text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{readingTime} min read</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Featured on Main Page</Label>
-                  <Switch
-                    checked={featuredMain}
-                    onCheckedChange={setFeaturedMain}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Featured in Category</Label>
-                  <Switch
-                    checked={featuredCategory}
-                    onCheckedChange={setFeaturedCategory}
-                  />
-                </div>
-
-                <div className="pt-3 border-t space-y-2">
-                  <Button
-                    onClick={() => handleSave('draft')}
-                    disabled={isSaving}
-                    variant="outline"
-                    className="w-full"
-                    size="sm"
-                  >
-                    {isSaving ? 'Saving...' : 'Save Draft'}
-                  </Button>
-                  <Button
-                    onClick={() => handleSave('published')}
-                    disabled={isSaving}
-                    className="w-full"
-                    size="sm"
-                  >
-                    {isSaving ? 'Publishing...' : 'Publish Now'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Categories */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center">
-                  <Tag className="w-4 h-4 mr-2" />
-                  Categories
-                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium">Primary Category</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Choose category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="tagInput">Add Tags</Label>
+                  <Input
+                    id="tagInput"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInput}
+                    placeholder="Type a tag and press Enter"
+                    className="mt-1"
+                  />
                 </div>
 
-                {filteredSubcategories.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-medium">Subcategories</Label>
-                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
-                      {filteredSubcategories.map((subcategory) => (
-                        <div key={subcategory.id} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`sub-${subcategory.id}`}
-                            checked={selectedSubcategories.includes(subcategory.id)}
-                            onChange={() => {
-                              if (selectedSubcategories.includes(subcategory.id)) {
-                                setSelectedSubcategories(selectedSubcategories.filter(id => id !== subcategory.id))
-                              } else if (selectedSubcategories.length < 4) {
-                                setSelectedSubcategories([...selectedSubcategories, subcategory.id])
-                              }
-                            }}
-                            disabled={!selectedSubcategories.includes(subcategory.id) && selectedSubcategories.length >= 4}
-                            className="rounded"
-                          />
-                          <Label 
-                            htmlFor={`sub-${subcategory.id}`}
-                            className="text-sm cursor-pointer"
-                          >
-                            {subcategory.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Tags */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Tags</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle>Related Articles</CardTitle>
+                <CardDescription>
+                  Up to 5 related articles (excludes current article)
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Add new tag"
-                      className="text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          addTag()
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={addTag}
-                      variant="outline"
-                      size="sm"
-                      disabled={!newTag.trim()}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs cursor-pointer hover:bg-red-100"
-                          onClick={() => removeTag(tag)}
-                        >
-                          {tag} ×
-                        </Badge>
-                      ))}
+              <CardContent className="space-y-4">
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {availableArticles.map((article) => (
+                    <div key={article.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`article-${article.id}`}
+                        checked={relatedArticles.includes(article.id)}
+                        onChange={() => toggleRelatedArticle(article.id)}
+                        disabled={!relatedArticles.includes(article.id) && relatedArticles.length >= 5}
+                        className="rounded"
+                      />
+                      <Label 
+                        htmlFor={`article-${article.id}`}
+                        className="text-sm flex-1"
+                      >
+                        {article.title}
+                      </Label>
                     </div>
-                  )}
+                  ))}
                 </div>
+                <p className="text-sm text-gray-500">
+                  {relatedArticles.length}/5 selected
+                </p>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
 
-            {/* Author */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Author</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <Label className="text-sm font-medium">Author Name</Label>
-                  <Input
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    placeholder="Enter author name"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    This will be displayed as the article author
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SEO */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center">
-                  <Search className="w-4 h-4 mr-2" />
-                  SEO
-                </CardTitle>
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Publication Settings</CardTitle>
+                <CardDescription>
+                  Configure slug, publication date, and featured status
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium">Focus Keyword</Label>
+                  <Label htmlFor="slug">URL Slug *</Label>
                   <Input
-                    value={focusKeyword}
-                    onChange={(e) => setFocusKeyword(e.target.value)}
-                    placeholder="Main keyword to rank for"
+                    id="slug"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder="url-friendly-title"
                     className="mt-1"
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Auto-generated from title. Must be unique.
+                  </p>
                 </div>
+
                 <div>
-                  <Label className="text-sm font-medium">Meta Description</Label>
-                  <Textarea
-                    value={metaDescription}
-                    onChange={(e) => setMetaDescription(e.target.value)}
-                    placeholder="Description for search engines"
+                  <Label htmlFor="publishedAt">Publication Date & Time</Label>
+                  <Input
+                    id="publishedAt"
+                    type="datetime-local"
+                    value={publishedAt}
+                    onChange={(e) => setPublishedAt(e.target.value)}
                     className="mt-1"
-                    rows={3}
-                    maxLength={160}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {metaDescription.length}/160 characters
+                  <p className="text-sm text-gray-500 mt-1">
+                    Required for scheduling. Defaults to now when publishing.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Featured Options</CardTitle>
+                <CardDescription>
+                  Control where this article is featured
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="featuredMain" className="flex flex-col space-y-1">
+                    <span className="flex items-center gap-2">
+                      <Star className="w-4 h-4" />
+                      Featured on Main Page
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      Show prominently on homepage
+                    </span>
+                  </Label>
+                  <Switch
+                    id="featuredMain"
+                    checked={featuredMain}
+                    onCheckedChange={setFeaturedMain}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="featuredCategory" className="flex flex-col space-y-1">
+                    <span className="flex items-center gap-2">
+                      <Star className="w-4 h-4" />
+                      Featured on Category Page
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      Highlight on category listing
+                    </span>
+                  </Label>
+                  <Switch
+                    id="featuredCategory"
+                    checked={featuredCategory}
+                    onCheckedChange={setFeaturedCategory}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Pre-publish Checklist */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            Publication Checklist
+          </CardTitle>
+          <CardDescription>
+            Complete these items before publishing
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Content Requirements</h4>
+              <div className="space-y-1 text-sm">
+                <div className={`flex items-center gap-2 ${title.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {title.trim() ? '✅' : '❌'} Title
+                </div>
+                <div className={`flex items-center gap-2 ${summary.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {summary.trim() ? '✅' : '❌'} Summary
+                </div>
+                <div className={`flex items-center gap-2 ${content.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {content.trim() ? '✅' : '❌'} Content
+                </div>
+                <div className={`flex items-center gap-2 ${categoryId ? 'text-green-600' : 'text-red-600'}`}>
+                  {categoryId ? '✅' : '❌'} Category
+                </div>
+                <div className={`flex items-center gap-2 ${heroImageUrl.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {heroImageUrl.trim() ? '✅' : '❌'} Hero Image
+                </div>
+                <div className={`flex items-center gap-2 ${heroImageAlt.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {heroImageAlt.trim() ? '✅' : '❌'} Hero Image Alt Text
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">SEO Requirements</h4>
+              <div className="space-y-1 text-sm">
+                <div className={`flex items-center gap-2 ${metaDescription.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {metaDescription.trim() ? '✅' : '❌'} Meta Description
+                </div>
+                <div className={`flex items-center gap-2 ${focusKeyword.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {focusKeyword.trim() ? '✅' : '❌'} Focus Keyword
+                </div>
+                <div className={`flex items-center gap-2 ${slug.trim() ? 'text-green-600' : 'text-red-600'}`}>
+                  {slug.trim() ? '✅' : '❌'} URL Slug
+                </div>
+                <div className={`flex items-center gap-2 ${seoScore >= 60 ? 'text-green-600' : seoScore >= 30 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {seoScore >= 60 ? '✅' : seoScore >= 30 ? '⚠️' : '❌'} SEO Score ({seoScore}/100)
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={handleSaveDraft}
+              variant="outline"
+              disabled={isSaving || isLoading}
+              className="flex-1"
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {isSaving ? 'Saving Draft...' : 'Save as Draft'}
+            </Button>
+            
+            <Button
+              onClick={handlePreview}
+              variant="outline"
+              disabled={isLoading || isSaving}
+              className="flex-1"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Preview
+            </Button>
+            
+            <Button
+              onClick={handleSchedule}
+              variant="outline"
+              disabled={isLoading || isSaving}
+              className="flex-1"
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Schedule Publication
+            </Button>
+            
+            <Button
+              onClick={handlePublish}
+              disabled={isLoading || isSaving}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? 'Publishing...' : 'Publish Now'}
+            </Button>
+          </div>
+          
+          <div className="mt-3">
+            <Button variant="ghost" asChild className="w-full">
+              <Link href="/admin/articles">
+                Cancel
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 } 
