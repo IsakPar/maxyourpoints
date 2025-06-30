@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { type BlogPost } from "@/lib/posts"
 
 interface Subcategory {
@@ -115,10 +116,14 @@ export default function HotelBlogGrid({ posts, initialFilter }: HotelBlogGridPro
       {/* Blog Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
         {filteredPosts.map((post) => (
-          <article 
+          <Link
             key={post.id}
-            className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border hover:border-sky-100"
+            href={`/blog/${post.slug}`}
+            className="block group"
           >
+            <article
+              className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border hover:border-sky-100"
+            >
             {/* Hero Image */}
             {(() => {
                              // Check all possible image field variations
@@ -183,7 +188,8 @@ export default function HotelBlogGrid({ posts, initialFilter }: HotelBlogGridPro
                 <span className="text-sm text-gray-500">{post.date}</span>
               </div>
             </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { type BlogPost } from "@/lib/posts"
 
 interface CreditCardBlogGridProps {
@@ -68,20 +69,14 @@ export default function CreditCardBlogGrid({ posts, initialFilter }: CreditCardB
       {/* Blog Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
         {filteredPosts.map((post) => (
-          <article 
+          <Link
             key={post.id}
-            className="bg-white rounded-xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 hover:scale-[1.05] hover:bg-[#D1F1EB] hover:-translate-y-2 cursor-pointer border border-transparent hover:border-teal-200 group"
-            role="button"
-            aria-label={`Read article: ${post.title}`}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                window.location.href = `/blog/${post.slug}`
-              }
-            }}
-            onClick={() => window.location.href = `/blog/${post.slug}`}
+            href={`/blog/${post.slug}`}
+            className="block group"
           >
+            <article
+              className="bg-white rounded-xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 hover:scale-[1.05] hover:bg-[#D1F1EB] hover:-translate-y-2 cursor-pointer border border-transparent hover:border-teal-200 group"
+            >
             {/* Image Placeholder */}
             <div className="aspect-[16/9] bg-gradient-to-br from-teal-500 to-sky-500 flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent transition-opacity duration-500 group-hover:opacity-80" />
@@ -120,7 +115,8 @@ export default function CreditCardBlogGrid({ posts, initialFilter }: CreditCardB
                 <span className="text-sm text-stone-600 group-hover:text-stone-800 transition-colors duration-500">{post.date}</span>
               </div>
             </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
     </div>
