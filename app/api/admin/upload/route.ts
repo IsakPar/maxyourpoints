@@ -6,6 +6,9 @@ import sharp from 'sharp'
 import heicConvert from 'heic-convert'
 import tinify from 'tinify'
 
+// Force Node.js runtime for Sharp compatibility
+export const runtime = 'nodejs'
+
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
 
@@ -15,6 +18,18 @@ if (TINYPNG_API_KEY) {
   tinify.key = TINYPNG_API_KEY
 } else {
   console.warn('⚠️ TinyPNG API key not found. Images will be compressed with Sharp only.')
+}
+
+// Verify Sharp is working
+let sharpInitialized = false
+try {
+  const testBuffer = Buffer.alloc(100)
+  sharp(testBuffer)
+  sharpInitialized = true
+  console.log('✅ Sharp initialized successfully')
+} catch (error) {
+  console.error('❌ Sharp initialization failed:', error)
+  sharpInitialized = false
 }
 
 // TODO: Replace with proper file upload system
@@ -86,6 +101,9 @@ export async function POST(request: NextRequest) {
     let wasHEIC = false
     let originalSize = file.size
     let compressionSteps: string[] = []
+    let width: number | undefined
+    let height: number | undefined
+    let format: string | undefined
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
@@ -114,30 +132,57 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Process and optimize image with Sharp first - Convert all to JPEG for optimal compression
-    console.log('🖼️ Converting and optimizing image to JPEG with Sharp...')
-    let sharpInstance = sharp(fileBuffer)
-    
-    // Get image metadata
-    const metadata = await sharpInstance.metadata()
-    const { width, height, format } = metadata
-
-    // Convert all images to JPEG for optimal compression
-    fileBuffer = Buffer.from(await sharpInstance
-      .jpeg({ 
-        quality: 90,
-        progressive: true,
-        mozjpeg: true
-      })
-      .toBuffer())
-    
-    // Update mime type to JPEG for all images
-    finalMimeType = 'image/jpeg'
-    
-    if (wasHEIC) {
-      compressionSteps.push('HEIC → JPEG conversion', 'Sharp JPEG optimization')
+    // Check if Sharp is available for processing
+    if (!sharpInitialized) {
+      console.warn('⚠️ Sharp not available, uploading original file')
+      // If Sharp is not available, use the original file (or HEIC-converted file)
+      processedBuffer = fileBuffer
+      compressionSteps.push(wasHEIC ? 'HEIC → JPEG conversion only' : 'No compression (Sharp unavailable)')
+      // Set default values for metadata
+      width = undefined
+      height = undefined
+      format = file.type.split('/')[1] || 'unknown'
     } else {
-      compressionSteps.push(`${format?.toUpperCase() || 'Original'} → JPEG conversion`, 'Sharp JPEG optimization')
+      // Process and optimize image with Sharp - Convert all to JPEG for optimal compression
+      console.log('🖼️ Converting and optimizing image to JPEG with Sharp...')
+      try {
+        let sharpInstance = sharp(fileBuffer)
+        
+        // Get image metadata
+        const metadata = await sharpInstance.metadata()
+        width = metadata.width
+        height = metadata.height
+        format = metadata.format
+
+        // Convert all images to JPEG for optimal compression
+        fileBuffer = Buffer.from(await sharpInstance
+          .jpeg({ 
+            quality: 90,
+            progressive: true,
+            mozjpeg: true
+          })
+          .toBuffer())
+        
+        // Update mime type to JPEG for all images
+        finalMimeType = 'image/jpeg'
+        
+        if (wasHEIC) {
+          compressionSteps.push('HEIC → JPEG conversion', 'Sharp JPEG optimization')
+        } else {
+          compressionSteps.push(`${format?.toUpperCase() || 'Original'} → JPEG conversion`, 'Sharp JPEG optimization')
+        }
+
+        console.log('✅ Sharp processing completed successfully')
+      } catch (sharpError) {
+        console.error('❌ Sharp processing failed:', sharpError)
+        // Fallback to original file if Sharp fails
+        compressionSteps.push(wasHEIC ? 'HEIC → JPEG conversion, Sharp failed' : 'Sharp processing failed')
+        console.warn('⚠️ Using original file due to Sharp error')
+        // Set default values for metadata when Sharp fails
+        width = undefined
+        height = undefined
+        format = file.type.split('/')[1] || 'unknown'
+      }
     }
 
     const sharpCompressedSize = fileBuffer.length
