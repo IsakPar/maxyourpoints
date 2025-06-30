@@ -68,7 +68,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-emerald-50 flex flex-col">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-teal-600 via-emerald-500 to-orange-500 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
@@ -90,8 +90,9 @@ export default function ContactPage() {
       </div>
 
       {/* Main Content with Better Spacing */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
+      <div className="flex-1 flex items-center justify-center py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <Card className="shadow-xl border-4 border-teal-500 rounded-3xl overflow-hidden bg-white">
@@ -210,7 +211,7 @@ export default function ContactPage() {
           {/* Contact Info & Social */}
           <div className="space-y-8">
             {/* Contact Information */}
-            <Card className="shadow-lg border-0 rounded-3xl overflow-hidden">
+            <Card className="shadow-lg border-2 border-teal-200 rounded-3xl overflow-hidden hover:border-teal-400 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50">
                 <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
                   <Mail size={20} />
@@ -242,7 +243,7 @@ export default function ContactPage() {
             </Card>
 
             {/* Social Media */}
-            <Card className="shadow-lg border-0 rounded-3xl overflow-hidden">
+            <Card className="shadow-lg border-2 border-purple-200 rounded-3xl overflow-hidden hover:border-purple-400 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
                 <CardTitle className="text-xl text-gray-800">Hang Out With Us! 🎉</CardTitle>
               </CardHeader>
@@ -286,6 +287,7 @@ export default function ContactPage() {
             </Card>
 
 
+            </div>
           </div>
         </div>
       </div>

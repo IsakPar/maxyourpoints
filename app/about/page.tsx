@@ -654,32 +654,35 @@ export default function AboutPage() {
                   {/* Elite Status Badges */}
                   <div className="flex flex-wrap justify-center gap-2 mb-6">
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800 border border-blue-300">
-                      ✈️ United 1K
+                      SkyTeam Elite
                     </Badge>
-                    <Badge variant="secondary" className="bg-red-100 text-red-800 border border-red-300">
-                      🇸🇪 SAS EuroBonus Gold
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border border-green-300">
+                      OneWorld Elite
                     </Badge>
-                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      🏨 Marriott Titanium
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border border-amber-300">
+                      Multiple Hotel Elite
                     </Badge>
                   </div>
                 </div>
                 
                 <div className="space-y-4 text-stone-700">
                   <p className="leading-relaxed">
-                    <strong>Elite traveler across multiple programs and tech architect.</strong> Isak holds elite status with Star Alliance carriers including SAS EuroBonus Gold (earned for the first time in his mid-teens) and United 1K, plus Marriott Titanium Elite. This multi-program expertise gives him unique insights into maximizing benefits across different loyalty systems.
+                    <strong>Elite traveler across multiple alliances and tech architect.</strong> Isak currently holds elite status in both SkyTeam and OneWorld, and maintained Star Alliance Gold for most of his teens until COVID disrupted the travel landscape. This cross-alliance experience provides unique insights into maximizing benefits across different loyalty ecosystems.
                   </p>
                   <p className="leading-relaxed">
-                    As the technical mastermind behind Max Your Points, he's built every component from scratch—custom SEO engines, AI-powered content matching, advanced CMS systems, and performance optimizations that most travel blogs only dream of. This platform showcases his approach to engineering: thoughtful, thorough, and uncompromising on quality.
+                    As the technical mastermind behind Max Your Points, he's architected every component from the ground up using cutting-edge technologies: Next.js 15 with React Server Components, PostgreSQL with pgVector for AI-powered content matching, custom SEO analysis engines, real-time analytics systems, and enterprise-grade security implementations. The platform runs on a modern tech stack with edge computing, advanced caching strategies, and microservice architecture.
                   </p>
                   <p className="leading-relaxed">
-                    The intersection of travel optimization and cutting-edge technology is where Isak thrives, and there's much more to come as he continues pushing the boundaries of what a travel platform can be.
+                    Beyond the travel expertise, Isak brings years of full-stack development experience, specializing in performance optimization, scalable system design, and creating sophisticated tools that make complex travel rewards strategies accessible to everyone. This platform showcases his approach to engineering: thoughtful, thorough, and uncompromising on quality.
+                  </p>
+                  <p className="leading-relaxed">
+                    The intersection of travel optimization and cutting-edge technology is where Isak thrives, continuously pushing the boundaries of what a travel platform can achieve through innovative engineering solutions.
                   </p>
                 </div>
                 
                 <div className="mt-8 p-4 bg-white rounded-lg border border-teal-200">
                   <div className="text-sm text-stone-600">
-                    <strong>Specializes in:</strong> Multi-alliance elite status strategies, full-stack development, custom platform architecture, and creating tools that make complex travel rewards accessible to everyone.
+                    <strong>Specializes in:</strong> Multi-alliance elite status strategies, modern web architecture (Next.js, React, TypeScript), AI/ML integration, custom CMS development, performance optimization, and creating tools that democratize complex travel rewards knowledge.
                   </div>
                 </div>
               </div>
@@ -696,33 +699,40 @@ export default function AboutPage() {
                   
                   {/* Elite Status Badges */}
                   <div className="flex flex-wrap justify-center gap-2 mb-6">
-                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 border border-orange-300">
-                      ✈️ Elite Flyer
-                    </Badge>
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800 border border-blue-300">
-                      🏨 Hotel Elite
+                      SkyTeam Platinum
+                    </Badge>
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border border-amber-300">
+                      Star Alliance Gold
                     </Badge>
                     <Badge variant="secondary" className="bg-green-100 text-green-800 border border-green-300">
-                      💳 Points Master
+                      OneWorld Lifetime Gold
                     </Badge>
                   </div>
                 </div>
                 
                 <div className="space-y-4 text-stone-700">
                   <p className="leading-relaxed">
-                    <strong>Seasoned travel strategist and points optimization expert.</strong> Nigel brings decades of experience navigating complex loyalty programs and maximizing travel value across multiple airlines and hotel chains.
+                    <strong>Seasoned traveller over many decades, including flying to Australia 3 times in 6 months business class for less than £6,000.</strong> Nigel is using his experience to navigate complex loyalty programmes and maximising travel value across airlines, hotels and credit cards.
                   </p>
                   <p className="leading-relaxed">
-                    His expertise in award booking strategies, elite status positioning, and credit card optimization helps Max Your Points deliver practical, tested advice that actually works in the real world.
+                    Part in thanks to Status matches Nigel holds Platinum in SkyTeam, Gold in Star Alliance, and life time gold in One World.
                   </p>
                   <p className="leading-relaxed">
-                    Nigel's analytical approach to travel rewards, combined with his extensive real-world experience, ensures our content is both strategically sound and practically applicable.
+                    Nigel's real world experience in traveling to over half the world and his thorough approach to bookings ensuring recognition and values will provide Max Your points into grit tips and hacks that will deliver tried and tested results at a fraction of the cost.
                   </p>
+                  
+                  <div className="mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border-l-4 border-amber-500">
+                    <p className="italic text-amber-800 leading-relaxed">
+                      "I've turned my hobby into my job. I have enjoyed finding cut price business class fares, and flying through priority security into great airline lounges whilst amassing recognition at every stage. I will now share the tricks and hacks with you at Max your points"
+                    </p>
+                    <p className="text-right mt-2 font-semibold text-amber-900">- Nigel Evans</p>
+                  </div>
                 </div>
                 
                 <div className="mt-8 p-4 bg-white rounded-lg border border-amber-200">
                   <div className="text-sm text-stone-600">
-                    <strong>Specializes in:</strong> Award booking strategies, elite status optimization, multi-program coordination, and turning complex loyalty systems into accessible travel opportunities.
+                    <strong>Specializes in:</strong> Status matches across alliance programs, business class deals, loyalty program optimization, and real-world tested strategies for maximizing travel value.
                   </div>
                 </div>
               </div>

@@ -8,6 +8,21 @@ export const metadata: Metadata = {
 export default function CookiePolicyPage() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
+      {/* Notice for users who came from cookie banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+        <div className="flex items-start gap-3">
+          <div className="text-blue-600 mt-0.5">ℹ️</div>
+          <div className="text-blue-800">
+            <p className="font-medium mb-1">Reading our Cookie Policy</p>
+            <p className="text-sm">
+              You can browse this page freely. When you're done reading and want to continue using the site, 
+              you'll be asked about cookie preferences again. 
+              <span className="font-medium"> This ensures you can make an informed decision.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       <h1 className="text-3xl font-bold mb-8">Cookie Policy</h1>
       
       <div className="prose prose-lg">

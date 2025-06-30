@@ -35,7 +35,11 @@ function LoginForm() {
 
       if (error) {
         console.error('❌ Login error:', error)
-        setError('Invalid credentials. Access denied.')
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed')) {
+          setError('Wrong email or password. Please contact admin if you need access.')
+        } else {
+          setError('Authentication failed. Please contact admin for assistance.')
+        }
         return
       }
 

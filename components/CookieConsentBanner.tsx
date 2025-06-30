@@ -1,15 +1,20 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { X, Shield, Cookie, CheckCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export function CookieConsentBanner() {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Don't show banner on cookie policy page - users need to read it first
+  const isOnCookiePolicyPage = pathname === '/cookie-policy';
 
   // Ensure component is mounted before rendering portal
   useEffect(() => {
@@ -67,7 +72,8 @@ export function CookieConsentBanner() {
   }, []);
 
   // Don't render until loaded and mounted (prevents hydration mismatch)
-  if (!mounted || !isLoaded || !isVisible) return null;
+  // Also don't render on cookie policy page - users need to read it without obstruction
+  if (!mounted || !isLoaded || !isVisible || isOnCookiePolicyPage) return null;
 
   const overlayContent = (
     <div 
