@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { hasPermission } from '@/lib/permissions'
-import sharp from 'sharp'
 import heicConvert from 'heic-convert'
 import tinify from 'tinify'
 
@@ -20,15 +19,21 @@ if (TINYPNG_API_KEY) {
   console.warn('⚠️ TinyPNG API key not found. Images will be compressed with Sharp only.')
 }
 
-// Verify Sharp is working
+// Conditionally import and initialize Sharp
+let sharp: any = null
 let sharpInitialized = false
+
 try {
-  const testBuffer = Buffer.alloc(100)
-  sharp(testBuffer)
+  sharp = require('sharp')
+  // Test Sharp functionality during runtime only
+  if (typeof window === 'undefined' && process.env.NODE_ENV !== 'development') {
+    const testBuffer = Buffer.alloc(100)
+    sharp(testBuffer)
+  }
   sharpInitialized = true
   console.log('✅ Sharp initialized successfully')
-} catch (error) {
-  console.error('❌ Sharp initialization failed:', error)
+} catch (error: any) {
+  console.warn('⚠️ Sharp not available during build:', error.message)
   sharpInitialized = false
 }
 
