@@ -18,6 +18,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'maxyourpoints-43is.vercel.app',
+      },
+      {
+        protocol: 'https',
         hostname: '*.supabase.co',
       },
       {

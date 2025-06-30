@@ -57,23 +57,49 @@ function getBaseURL(): string {
   // Server-side: determine base URL based on environment
   // Use NEXT_PUBLIC_SITE_URL if set, otherwise fallback to environment detection
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const vercelUrl = process.env.VERCEL_URL;
+  const nodeEnv = process.env.NODE_ENV;
+  
+  // Debug logging for production troubleshooting
+  console.log('🔍 Environment debug info:', {
+    nodeEnv,
+    siteUrl,
+    vercelUrl,
+    hasWindow: typeof window !== 'undefined'
+  });
+  
+  // For development
+  if (process.env.NODE_ENV !== 'production') {
+    const port = process.env.PORT || '3000';
+    const devUrl = `http://localhost:${port}`;
+    console.log('🏠 Using development URL:', devUrl);
+    return devUrl;
+  }
+  
+  // For Vercel deployment
+  if (process.env.VERCEL_URL) {
+    const vercelUrlFull = `https://${process.env.VERCEL_URL}`;
+    console.log('🚀 Using Vercel URL:', vercelUrlFull);
+    return vercelUrlFull;
+  }
+  
+  // If NEXT_PUBLIC_SITE_URL is set but points to the wrong domain, override it
+  if (siteUrl && siteUrl.includes('maxyourpoints.com')) {
+    // Override with correct Vercel URL for production
+    const overrideUrl = 'https://maxyourpoints-43is.vercel.app';
+    console.log('⚠️ Overriding maxyourpoints.com with:', overrideUrl);
+    return overrideUrl;
+  }
   
   if (siteUrl) {
+    console.log('🌐 Using NEXT_PUBLIC_SITE_URL:', siteUrl);
     return siteUrl;
   }
   
-  // Fallback: detect environment
-  if (process.env.NODE_ENV !== 'production') {
-    // Development
-    const port = process.env.PORT || '3000';
-    return `http://localhost:${port}`;
-  } else if (process.env.VERCEL_URL) {
-    // Vercel deployment (preview or production)
-    return `https://${process.env.VERCEL_URL}`;
-  } else {
-    // Production fallback
-    return 'https://maxyourpoints.vercel.app';
-  }
+  // Production fallback - use the actual production URL
+  const fallbackUrl = 'https://maxyourpoints-43is.vercel.app';
+  console.log('🔧 Using fallback URL:', fallbackUrl);
+  return fallbackUrl;
 }
 
 class APIClient {
