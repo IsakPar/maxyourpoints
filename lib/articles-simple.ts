@@ -1,6 +1,10 @@
-import { api } from '@/lib/api'
+import { createClient } from '@supabase/supabase-js'
 
-// Using new API client instead of Supabase
+// Create Supabase client for direct database access
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 // Simple cache for better performance
 const cache = new Map<string, { data: any; timestamp: number }>()
@@ -136,15 +140,25 @@ export async function getPublishedArticles(limit: number = 10, offset: number = 
 
   return withCache(cacheKey, async () => {
     try {
-      console.log('📄 Fetching published articles from API...')
-      const data = await api.getArticles({ 
-        limit, 
-        offset: offset,
-        published: true 
-      })
+      console.log('📄 Fetching published articles from database...')
+      const { data, error, count } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `, { count: 'exact' })
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .range(offset, offset + limit - 1)
 
-      const articles = (data.articles || []).map(transformToFrontendFormat)
-      const total = data.total || 0
+      if (error) throw error
+
+      const articles = (data || []).map(transformToFrontendFormat)
+      const total = count || 0
 
       console.log(`✅ Found ${articles.length} published articles`)
       return {
@@ -172,18 +186,33 @@ export async function getArticleBySlug(slug: string) {
   return withCache(cacheKey, async () => {
     try {
       console.log(`📄 Fetching article: ${slug}`)
-      const data = await api.getArticle(slug)
+      const { data, error } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single()
 
-      if (!data) return null
+      if (error || !data) {
+        console.error(`❌ Article not found: ${slug}`, error)
+        return null
+      }
 
       // Return full article data (not just preview)
       return {
         ...transformToFrontendFormat(data),
         content: data.content,
-        metaDescription: data.metaDescription,
-        imageAlt: data.featuredImage + ' alt text',
-        featuredMain: data.featured || false,
-        featuredCategory: data.featured || false
+        metaDescription: data.meta_description,
+        imageAlt: data.hero_image_alt || (data.hero_image_url ? data.title + ' featured image' : ''),
+        featuredMain: data.featured_main || false,
+        featuredCategory: data.featured_category || false
       }
     } catch (error) {
       console.error(`❌ Article not found: ${slug}`, error)
@@ -201,15 +230,41 @@ export async function getArticlesByCategory(categorySlug: string, limit: number 
 
   return withCache(cacheKey, async () => {
     try {
-      const data = await api.getArticles({ 
-        limit, 
-        offset,
-        category: categorySlug,
-        published: true 
-      })
+      // First get the category ID by slug
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', categorySlug)
+        .single()
 
-      const articles = (data.articles || []).map(transformToFrontendFormat)
-      const total = data.total || 0
+      if (categoryError || !categoryData) {
+        console.error('❌ Category not found:', categorySlug)
+        return {
+          articles: [],
+          total: 0,
+          hasMore: false
+        }
+      }
+
+      const { data, error, count } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `, { count: 'exact' })
+        .eq('category_id', categoryData.id)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (error) throw error
+
+      const articles = (data || []).map(transformToFrontendFormat)
+      const total = count || 0
 
       console.log(`📄 Found ${articles.length} articles for category ${categorySlug}`)
       return {
@@ -237,14 +292,31 @@ export async function getFeaturedArticles(type: 'main' | 'category' = 'main', li
   return withCache(cacheKey, async () => {
     try {
       console.log(`🌟 Fetching featured articles (${type})`)
-      // For now, just get the latest published articles
-      // This can be enhanced when we add featured flags to the API
-      const data = await api.getArticles({ 
-        limit, 
-        published: true
-      })
+      
+      let query = supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(limit)
 
-      const articles = (data.articles || []).map(transformToFrontendFormat)
+      // If categoryId is provided, filter by category
+      if (categoryId) {
+        query = query.eq('category_id', categoryId)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      const articles = (data || []).map(transformToFrontendFormat)
       console.log(`✅ Found ${articles.length} featured articles`)
       return articles
     } catch (error) {
@@ -263,12 +335,24 @@ export async function getArticlesBySubcategoriesSmartDistribution(categoryId: st
   return withCache(cacheKey, async () => {
     try {
       // For now, return articles for the main category
-      const data = await api.getArticles({ 
-        limit: 24, 
-        published: true
-      })
+      const { data, error } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('category_id', categoryId)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(24)
 
-      const articles = (data.articles || []).map(transformToFrontendFormat)
+      if (error) throw error
+
+      const articles = (data || []).map(transformToFrontendFormat)
       
       // Group by first subcategory for compatibility
       const subcategoryArticles: { [key: string]: any[] } = {}
@@ -292,13 +376,36 @@ export async function getFeaturedArticlesByCategory(categorySlug: string) {
 
   return withCache(cacheKey, async () => {
     try {
-      const data = await api.getArticles({ 
-        limit: 6, 
-        category: categorySlug,
-        published: true
-      })
+      // First get the category ID by slug
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', categorySlug)
+        .single()
 
-      return (data.articles || []).map(transformToFrontendFormat)
+      if (categoryError || !categoryData) {
+        console.error('❌ Category not found:', categorySlug)
+        return []
+      }
+
+      const { data, error } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('category_id', categoryData.id)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(6)
+
+      if (error) throw error
+
+      return (data || []).map(transformToFrontendFormat)
     } catch (error) {
       console.error('❌ Error fetching featured category articles:', error)
       return []
@@ -314,7 +421,13 @@ export async function getCategories() {
 
   return withCache(cacheKey, async () => {
     try {
-      const data = await api.getCategories()
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name')
+
+      if (error) throw error
+
       return data || []
     } catch (error) {
       console.error('❌ Error fetching categories:', error)
@@ -332,13 +445,22 @@ export async function searchArticles(query: string, limit: number = 10, offset: 
   return withCache(cacheKey, async () => {
     try {
       // Get ALL published articles for comprehensive search
-      // No limit to ensure we can find articles that have been "pushed out" from display pages
-      const data = await api.getArticles({ 
-        published: true
-        // Intentionally no limit - we need to search through ALL articles
-      })
+      const { data, error } = await supabase
+        .from('articles')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
 
-      const allArticles = (data.articles || []).map(transformToFrontendFormat)
+      if (error) throw error
+
+      const allArticles = (data || []).map(transformToFrontendFormat)
       
       // Enhanced client-side search - search in title, summary, content, tags, and headers
       const searchQuery = query.toLowerCase()

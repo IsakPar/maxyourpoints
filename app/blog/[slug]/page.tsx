@@ -54,7 +54,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       )
     `)
     .eq('slug', slug)
-    .eq('published', true)
+    .eq('status', 'published')
     .single()
 
   if (!article || error) {
@@ -74,7 +74,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         name
       )
     `)
-    .eq('published', true)
+    .eq('status', 'published')
     .neq('slug', slug)
     .order('created_at', { ascending: false })
     .limit(4)
@@ -266,7 +266,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       category:categories(name)
     `)
     .eq('slug', slug)
-    .eq('published', true)
+    .eq('status', 'published')
     .single()
 
   if (!article) {

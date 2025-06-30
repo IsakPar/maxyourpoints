@@ -6,6 +6,9 @@ import BlogCarousel from "@/components/BlogCarousel/BlogCarousel"
 import { getFeaturedArticles } from "@/lib/articles-simple"
 import { ConfirmationBanner } from "@/components/blog/ConfirmationBanner"
 
+// Force dynamic rendering to ensure proper SSR
+export const dynamic = 'force-dynamic'
+
 // Transform database articles to component format
 function transformToShowcaseFormat(articles: any[]) {
   return articles.map(article => ({
