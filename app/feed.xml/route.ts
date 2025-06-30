@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
   const supabase = await createClient();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app';
 
   try {
     // Fetch recent published articles

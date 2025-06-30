@@ -17,6 +17,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
   },
   alternates: {
-    canonical: 'https://maxyourpoints.com',
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app',
   },
 } 

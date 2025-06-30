@@ -15,10 +15,9 @@ Allow: /privacy-policy
 Allow: /terms-and-conditions
 
 # Sitemap location
-Sitemap: https://maxyourpoints.com/sitemap.xml
+Sitemap: /sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
 
-# Host directive (Google specific)
-Host: https://maxyourpoints.com 
+# Host directive (Google specific) - will be set dynamically by the app 

@@ -12,14 +12,14 @@ function transformToPostFormat(articles: any[]) {
     id: article.id, // Keep as string UUID
     title: article.title,
     summary: article.summary,
-    category: article.category,
+    category: article.category?.name || 'Uncategorized',
     readTime: article.readTime,
     image: article.image || "/placeholder.svg",
-    slug: `/blog/${article.slug}`,
+    slug: article.slug, // Remove /blog/ prefix since it's already included
     date: article.date,
     author: article.author,
     excerpt: article.summary,
-    tag: article.category // Add tag property for compatibility
+    tag: article.category?.name || 'Uncategorized' // Extract name from category object
   }))
 }
 

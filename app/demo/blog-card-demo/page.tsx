@@ -47,6 +47,16 @@ export default function BlogCardDemo() {
               } cursor-pointer bg-transparent`}
               onMouseEnter={() => setHoveredCard(post.id)}
               onMouseLeave={() => setHoveredCard(null)}
+              onClick={() => console.log(`Navigate to article: ${post.id}`)}
+              role="button"
+              aria-label={`Read article: ${post.title}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  console.log(`Navigate to article: ${post.id}`)
+                }
+              }}
             >
               <div className="w-full md:w-2/5 h-48 flex-shrink-0 overflow-hidden rounded-md">
                 <img src={post.image || "/placeholder.svg"} alt={post.title} className="w-full h-full object-cover" />

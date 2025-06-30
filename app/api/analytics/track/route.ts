@@ -87,7 +87,7 @@ function getDeviceType(userAgent: string): string {
 }
 
 function getTrafficSource(referrer: string): string {
-  if (!referrer || referrer.includes(process.env.NEXT_PUBLIC_SERVER_URL || 'maxyourpoints.com')) {
+  if (!referrer || referrer.includes(process.env.NEXT_PUBLIC_SITE_URL || 'maxyourpoints.vercel.app')) {
     return 'direct'
   }
   if (referrer.includes('google.') || referrer.includes('bing.') || referrer.includes('yahoo.') || referrer.includes('duckduckgo.')) {

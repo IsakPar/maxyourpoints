@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         const mailjetService = new MailjetService()
         
         // Generate confirmation URL
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'
         const confirmationUrl = `${baseUrl}/api/confirm-email?token=${result.confirmation_token}`
         
         const emailSubject = '✉️ Please confirm your subscription to Max Your Points'

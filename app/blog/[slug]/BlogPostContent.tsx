@@ -108,7 +108,7 @@ function RichTextRenderer({ content }: { content: any }) {
 }
 
 export default function BlogPostContent({ article }: BlogPostContentProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'
   
   const blogPostingJsonLd = {
     "@context": "https://schema.org",

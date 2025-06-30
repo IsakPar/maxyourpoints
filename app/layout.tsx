@@ -21,7 +21,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'),
   title: {
     default: "Max Your Points – Travel Smarter, Earn More",
     template: "%s | Max Your Points"
@@ -50,13 +50,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app',
     siteName: 'Max Your Points',
     title: "Max Your Points – Travel Smarter, Earn More",
     description: "Expert strategies on travel points, flight and hotel reviews, and maximizing rewards programs. Learn how to travel better for less.",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/travel-rewards-cards.png`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'}/travel-rewards-cards.png`,
         width: 1200,
         height: 630,
         alt: 'Max Your Points - Travel Rewards and Points Optimization',
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     creator: '@maxyourpoints',
     title: "Max Your Points – Travel Smarter, Earn More",
     description: "Expert strategies on travel points, flight and hotel reviews, and maximizing rewards programs.",
-    images: [`${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/travel-rewards-cards.png`],
+    images: [`${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'}/travel-rewards-cards.png`],
   },
   robots: {
     index: true,
@@ -84,10 +84,10 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com',
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app',
     types: {
       'application/rss+xml': [
-        { url: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/feed.xml`, title: 'Max Your Points RSS Feed' }
+        { url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'}/feed.xml`, title: 'Max Your Points RSS Feed' }
       ]
     }
   },
@@ -124,7 +124,7 @@ export const viewport: Viewport = {
   ],
 }
 
-const siteUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.vercel.app'
 
 const websiteJsonLd = {
   "@context": "https://schema.org",

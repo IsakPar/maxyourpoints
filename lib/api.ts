@@ -47,6 +47,35 @@ interface Category {
   featured?: boolean;
 }
 
+// Helper function to get the correct base URL for API calls
+function getBaseURL(): string {
+  // Client-side: always use relative URLs (same origin)
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  
+  // Server-side: determine base URL based on environment
+  // Use NEXT_PUBLIC_SITE_URL if set, otherwise fallback to environment detection
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  
+  if (siteUrl) {
+    return siteUrl;
+  }
+  
+  // Fallback: detect environment
+  if (process.env.NODE_ENV !== 'production') {
+    // Development
+    const port = process.env.PORT || '3000';
+    return `http://localhost:${port}`;
+  } else if (process.env.VERCEL_URL) {
+    // Vercel deployment (preview or production)
+    return `https://${process.env.VERCEL_URL}`;
+  } else {
+    // Production fallback
+    return 'https://maxyourpoints.vercel.app';
+  }
+}
+
 class APIClient {
   private token: string | null = null;
 
@@ -59,34 +88,8 @@ class APIClient {
 
   private async request(endpoint: string, options: RequestInit = {}) {
     // Construct proper URL for both client and server-side requests
-    let url: string;
-    
-    if (typeof window !== 'undefined') {
-      // Client-side: use relative URLs (automatically uses current port)
-      url = `/api${endpoint}`;
-    } else {
-      // Server-side: determine the base URL based on environment
-      let baseUrl: string;
-      
-      // Always use localhost for development (NODE_ENV !== 'production')
-      if (process.env.NODE_ENV !== 'production') {
-        const port = process.env.PORT || '3001';
-        baseUrl = `http://localhost:${port}`;
-      } else if (process.env.VERCEL_URL) {
-        // Production/Preview on Vercel
-        baseUrl = `https://${process.env.VERCEL_URL}`;
-      } else if (process.env.NEXT_PUBLIC_SITE_URL) {
-        // Custom domain
-        baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-      } else {
-        // For build time, use a placeholder - will be replaced by relative URLs in production
-        baseUrl = 'http://localhost:3000';
-      }
-      
-      url = `${baseUrl}/api${endpoint}`;
-    }
-    
-    // Making API request
+    const baseUrl = getBaseURL();
+    const url = baseUrl ? `${baseUrl}/api${endpoint}` : `/api${endpoint}`;
     
     const config: RequestInit = {
       ...options,
@@ -287,16 +290,8 @@ class APIClient {
   // Media methods (use authenticated requests)
   async uploadFile(formData: FormData) {
     // Use the same URL construction logic as other methods
-    let url: string;
-    
-    if (typeof window !== 'undefined') {
-      // Client-side: use relative URLs
-      url = `/api/admin/upload`;
-    } else {
-      // Server-side: use absolute URL
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://maxyourpoints.com' : 'http://localhost:3000');
-      url = `${baseUrl}/api/admin/upload`;
-    }
+    const baseUrl = getBaseURL();
+    const url = baseUrl ? `${baseUrl}/api/admin/upload` : `/api/admin/upload`;
     
     const config: RequestInit = {
       method: 'POST',

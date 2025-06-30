@@ -334,7 +334,7 @@ const BlogCarousel = ({
                     <p className={`text-base ${currentTheme.excerpt} mb-4`}>{post.excerpt}</p>
                     <div className="flex items-center justify-between">
                       <span className={`text-sm ${currentTheme.date}`}>{post.date}</span>
-                      <OutlinedGradientButton href={post.slug}>Read More</OutlinedGradientButton>
+                      <OutlinedGradientButton>Read More</OutlinedGradientButton>
                     </div>
                   </div>
                 </article>

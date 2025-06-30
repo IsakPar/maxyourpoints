@@ -349,12 +349,12 @@ const BlogCarousel = ({
                     <div className="flex items-center justify-between">
                       <span className={`text-sm transition-colors duration-500 ${currentTheme.date} group-hover:text-stone-800`}>{post.date}</span>
                       <div className="rounded-xl inline-flex justify-center items-center gap-2 transition-colors duration-500 min-h-[44px] min-w-[44px] p-2 text-stone-950 group-hover:text-stone-800">
-                        <Link href={post.slug} className="inline-flex items-center gap-2 group/link">
+                        <div className="inline-flex items-center gap-2 group/link">
                           <span className="text-base font-bold font-['Inter'] leading-normal">
                             Read more<span className="sr-only"> about {post.title}</span>
                           </span>
                           <ChevronRight size={24} className="transition-transform duration-500 group-hover/link:translate-x-1" />
-                        </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
