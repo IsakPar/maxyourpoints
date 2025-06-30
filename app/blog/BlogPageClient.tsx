@@ -44,6 +44,19 @@ export default function BlogPageClient({ articles, categories }: BlogPageClientP
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
 
+  // Debug logging
+  console.log('🔍 BlogPageClient Debug:')
+  console.log('- Received articles count:', articles.length)
+  console.log('- Received categories count:', categories.length)
+  console.log('- Active category:', activeCategory)
+  if (articles.length > 0) {
+    console.log('- Sample article:', {
+      title: articles[0].title,
+      category: articles[0].category || (articles[0] as any).categories,
+      slug: articles[0].slug
+    })
+  }
+
   // Prevent hydration issues
   useEffect(() => {
     setMounted(true)
@@ -72,6 +85,20 @@ export default function BlogPageClient({ articles, categories }: BlogPageClientP
         
         return categoryName === activeCategory
       })
+
+  // Debug filtered articles
+  console.log('🎯 Filtering Debug:')
+  console.log('- Active category:', activeCategory)
+  console.log('- Total articles before filter:', articles.length)
+  console.log('- Filtered articles count:', filteredArticles.length)
+  if (activeCategory !== "View All" && articles.length > 0) {
+    console.log('- Sample category extraction:', {
+      firstArticle: articles[0].title,
+      extractedCategory: (articles[0] as any).categories?.name || 
+                        (typeof articles[0].category === 'object' ? articles[0].category?.name : articles[0].category),
+      targetCategory: activeCategory
+    })
+  }
 
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
