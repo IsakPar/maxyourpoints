@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { type BlogPost } from "@/lib/posts"
 
 interface TravelHackBlogGridProps {
@@ -68,10 +69,14 @@ export default function TravelHackBlogGrid({ posts, initialFilter }: TravelHackB
       {/* Blog Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
         {filteredPosts.map((post) => (
-          <article 
+          <Link
             key={post.id}
-            className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border hover:border-sky-100"
+            href={`/blog/${post.slug}`}
+            className="block group"
           >
+            <article
+              className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border hover:border-sky-100"
+            >
             {/* Image Placeholder */}
             <div className="aspect-[16/9] bg-gradient-to-br from-teal-500 to-sky-500 flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
@@ -110,7 +115,8 @@ export default function TravelHackBlogGrid({ posts, initialFilter }: TravelHackB
                 <span className="text-sm text-gray-500">{post.date}</span>
               </div>
             </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
     </div>
