@@ -6,7 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Clock, User, ArrowLeft, Calendar } from "lucide-react"
 import CTASection from "@/components/CTASection/CTASection"
-import ArticleTracker from "@/components/ArticleTracker"
+import { ArticleTracker } from "@/components/ArticleTracker"
 
 interface ArticlePageProps {
   params: {
