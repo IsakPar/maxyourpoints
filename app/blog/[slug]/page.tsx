@@ -14,6 +14,19 @@ interface ArticlePageProps {
   }
 }
 
+// Allow dynamic params for ISR fallback
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  try {
+    const { articles } = await getPublishedArticles(1000, 0)
+    return articles.map(article => ({ slug: article.slug }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return []
+  }
+}
+
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params
   
