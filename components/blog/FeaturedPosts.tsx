@@ -15,7 +15,10 @@ export default function FeaturedPosts({ posts }: FeaturedPostsProps) {
       <div className="max-w-screen-xl mx-auto px-6 md:px-16">
         {posts.map((post, index) => (
           <div key={post.id} className="mb-24 last:mb-0">
-            <div className="bg-teal-50 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 hover:scale-[1.05] hover:bg-[#D1F1EB] hover:-translate-y-2 cursor-pointer border border-transparent hover:border-teal-200 group">
+            <Link
+              href={`/blog/${post.slug}`}
+              className="block bg-teal-50 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 hover:scale-[1.05] hover:bg-[#D1F1EB] hover:-translate-y-2 cursor-pointer border border-transparent hover:border-teal-200 group"
+            >
               <div className={`flex flex-col lg:flex-row ${
                 index % 2 === 1 ? "lg:flex-row-reverse" : ""
               }`}>
@@ -74,10 +77,7 @@ export default function FeaturedPosts({ posts }: FeaturedPostsProps) {
                         {post.readTime} min read
                       </div>
                     </div>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="inline-flex items-center gap-2 text-stone-950 font-bold font-['Inter'] group-hover:text-stone-800 transition-colors duration-500 group/link"
-                    >
+                    <div className="inline-flex items-center gap-2 text-stone-950 font-bold font-['Inter'] group-hover:text-stone-800 transition-colors duration-500 group/link">
                       Read More
                       <svg
                         className="w-6 h-6 transition-transform duration-500 group-hover/link:translate-x-1"
@@ -92,11 +92,11 @@ export default function FeaturedPosts({ posts }: FeaturedPostsProps) {
                           d="M9 5l7 7-7 7"
                         />
                       </svg>
-                    </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         ))}
       </div>
