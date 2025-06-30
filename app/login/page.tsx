@@ -6,87 +6,19 @@ import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, AlertCircle, Trash2 } from 'lucide-react'
-
-// Function to forcefully clear all authentication state
-const clearAllAuthState = async () => {
-  try {
-    // Clear server-side session first
-    try {
-      await fetch('/api/auth/clear-session', { 
-        method: 'POST',
-        cache: 'no-cache'
-      })
-    } catch (err) {
-      console.warn('Server session clear failed:', err)
-    }
-    
-    // Clear Supabase session
-    await supabase.auth.signOut({ scope: 'global' })
-    
-    // Clear all localStorage items
-    if (typeof window !== 'undefined') {
-      // Clear specific auth items
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('supabase.auth.token')
-      localStorage.removeItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1] + '-auth-token')
-      
-      // Clear all Supabase-related items
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
-          localStorage.removeItem(key)
-        }
-      })
-      
-      // Clear sessionStorage
-      sessionStorage.clear()
-      
-      // Clear all cookies manually
-      document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-      })
-    }
-    
-    console.log('✅ All authentication state cleared (client + server)')
-  } catch (error) {
-    console.error('❌ Error clearing auth state:', error)
-  }
-}
+import { Loader2, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isClearing, setIsClearing] = useState(false)
   const [error, setError] = useState('')
   
   const router = useRouter()
   const searchParams = useSearchParams()
   const errorParam = searchParams?.get('error')
-
-  // Clear auth state when component mounts if there's a session_expired error
-  useEffect(() => {
-    if (errorParam === 'session_expired') {
-      clearAllAuthState()
-    }
-  }, [errorParam])
-
-  const handleClearSession = async () => {
-    setIsClearing(true)
-    setError('')
-    
-    try {
-      await clearAllAuthState()
-      // Force page reload to clear any cached state
-      window.location.reload()
-    } catch (err) {
-      setError('Failed to clear session')
-    } finally {
-      setIsClearing(false)
-    }
-  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,9 +26,6 @@ function LoginForm() {
     setError('')
 
     try {
-      // Clear any existing auth state before new login
-      await clearAllAuthState()
-      
       console.log('🔑 Attempting Supabase login...')
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -106,7 +35,7 @@ function LoginForm() {
 
       if (error) {
         console.error('❌ Login error:', error)
-        setError(error.message)
+        setError('Invalid credentials. Access denied.')
         return
       }
 
@@ -120,128 +49,144 @@ function LoginForm() {
           }
         })
         
-        // Redirect will happen automatically via auth state change and middleware
         router.push('/admin')
         router.refresh()
       }
     } catch (err: any) {
       console.error('💥 Login error:', err)
-      setError(err.message || 'Login failed')
+      setError('Authentication failed. Try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const getErrorMessage = () => {
+    if (error) return error
+    
+    switch (errorParam) {
+      case 'session_expired':
+        return 'Your session expired. Please authenticate again.'
+      case 'authentication_required':
+      case 'unauthorized':
+        return 'Authentication required to proceed.'
+      default:
+        return null
+    }
+  }
+
+  const errorMessage = getErrorMessage()
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Admin Login
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access the CMS
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+      {/* Fun Security Banner - Cookie Banner Style */}
+      <div className="w-full max-w-md">
+        {/* Main Security Warning Banner */}
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white p-6 rounded-t-2xl shadow-2xl border-4 border-red-600">
+          <div className="flex items-center gap-3 mb-3">
+            <Shield className="w-8 h-8 text-yellow-300" />
+            <div>
+              <h1 className="text-xl font-bold">🚨 Hold Up There!</h1>
+              <p className="text-sm opacity-90">Not that fast - are you allowed to be here?</p>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed">
+            This is a <strong>restricted area</strong> for authorized personnel only. 
+            If you're not supposed to be here, this is your friendly reminder to 
+            <strong> turn around and walk away slowly</strong> 🚪
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the admin panel
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {(error || errorParam) && (
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {error || 
-                   (errorParam === 'session_expired' ? 'Your session has expired due to inactivity. Please log in again.' :
-                    errorParam === 'authentication_required' ? 'You need to be logged in to access this page.' :
-                    errorParam === 'unauthorized' ? 'You need to be logged in to access this page.' :
-                    'Please log in to continue.')}
-                </AlertDescription>
-              </Alert>
-            )}
+        {/* Login Form - Connected to Banner */}
+        <div className="bg-white p-6 rounded-b-2xl shadow-2xl border-4 border-t-0 border-red-600">
+          {errorMessage && (
+            <Alert className="mb-4 border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800 font-medium">
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
 
-            {/* Session clearing button for troubleshooting */}
-            {(errorParam === 'session_expired' || error) && (
-              <div className="mb-4">
-                <Button 
-                  variant="outline" 
-                  onClick={handleClearSession}
-                  disabled={isClearing}
-                  className="w-full"
-                >
-                  {isClearing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Clearing Session...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Clear Session & Reload
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-gray-500 mt-1 text-center">
-                  If you're still having login issues, click this button
-                </p>
-              </div>
-            )}
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700 font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@domain.com"
+                required
+                disabled={isLoading}
+                className="border-2 border-gray-300 focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
 
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700 font-medium">
+                Password
+              </Label>
+              <div className="relative">
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
+                  className="border-2 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
               </div>
-
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-4 text-xs text-gray-500 text-center">
-              <p>For demo purposes:</p>
-              <p>Email: isak@maxyourpoints.com</p>
-              <p>Password: admin123</p>
             </div>
-          </CardContent>
-        </Card>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Verifying Access...
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2 h-5 w-5" />
+                  Authenticate & Enter
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Friendly Warning Footer */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🔒</div>
+              <div className="text-sm text-gray-600">
+                <p className="font-medium text-gray-800 mb-1">Security Notice:</p>
+                <p>
+                  This system is monitored and protected. All access attempts are logged. 
+                  If you don't have valid credentials, please contact your administrator.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -250,8 +195,11 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading security checkpoint...</p>
+        </div>
       </div>
     }>
       <LoginForm />
