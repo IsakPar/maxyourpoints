@@ -53,11 +53,14 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
                   {item.icon} {item.name}
                 </Link>
               ))}
-              {/* Show coming soon only for admins */}
-              {user?.role === 'admin' || user?.role === 'super_admin' ? (
-                <div className="text-gray-400 hover:text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
-                  📈 Analytics (Coming Soon)
-                </div>
+              {/* Analytics link for admins */}
+              {user?.role === 'admin' ? (
+                <Link
+                  href="/admin/analytics"
+                  className="text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                >
+                  📈 Analytics
+                </Link>
               ) : null}
             </div>
           </div>

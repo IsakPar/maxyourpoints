@@ -1,10 +1,11 @@
 #!/usr/bin/env tsx
 
-// Load environment variables for script execution
+// Load environment variables FIRST
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@/lib/supabase/server'
+// Import Supabase directly to avoid module-level env var checks
+import { createClient } from '@supabase/supabase-js'
 
 const DEFAULT_CATEGORIES = [
   {
@@ -37,7 +38,22 @@ async function setupCategories() {
   console.log('🏗️  Setting up initial categories...')
   
   try {
-    const supabase = await createClient()
+    // Create Supabase client with service role for admin operations
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables')
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+    
+    console.log('✅ Connected to Supabase')
     
     // Check if categories already exist
     const { data: existingCategories, error: fetchError } = await supabase

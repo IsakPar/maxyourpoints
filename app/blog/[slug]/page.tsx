@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Clock, User, ArrowLeft, Calendar } from "lucide-react"
 import CTASection from "@/components/CTASection/CTASection"
+import ArticleTracker from "@/components/ArticleTracker"
 
 interface ArticlePageProps {
   params: {
@@ -32,6 +33,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
     return (
       <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100">
+        {/* Analytics Tracker */}
+        <ArticleTracker 
+          articleSlug={article.slug}
+          pageTitle={article.title}
+          category={typeof article.category === 'object' ? article.category.name : article.category}
+        />
+        
         {/* Main Content Layout */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">

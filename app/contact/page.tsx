@@ -89,8 +89,9 @@ export default function ContactPage() {
         <div className="absolute bottom-10 right-10 text-6xl opacity-20 animate-bounce delay-1000">🎯</div>
       </div>
 
-      <div className="container mx-auto px-4 py-32 mt-32 mb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      {/* Main Content with Better Spacing */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <Card className="shadow-xl border-4 border-teal-500 rounded-3xl overflow-hidden bg-white">

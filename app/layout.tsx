@@ -9,26 +9,121 @@ import Script from "next/script"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from 'react-hot-toast'
+import { Toaster as SonnerToaster } from 'sonner'
 import { PERFORMANCE_HINTS, CRITICAL_CSS } from "@/lib/performance"
+import { ThemeProvider } from '@/components/theme-provider'
+import { ToastProvider } from '@/components/ui/toast-provider'
+import ArticleTracker from '@/components/ArticleTracker'
 
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
   preload: true,
+  variable: '--font-inter'
 })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'),
-  title: "Max Your Points - Travel Rewards & Points Optimization",
-  description: "Discover how to maximize your travel rewards points and credit card benefits. Expert tips on flights, hotels, and travel hacking for savvy travelers.",
-  keywords: "travel rewards, credit card points, airline miles, hotel points, travel hacking",
-  authors: [{ name: "Max Your Points" }],
+  title: {
+    default: "Max Your Points – Travel Smarter, Earn More",
+    template: "%s | Max Your Points"
+  },
+  description: "Expert strategies on travel points, flight and hotel reviews, and maximizing rewards programs. Learn how to travel better for less with our comprehensive guides.",
+  keywords: [
+    "travel rewards",
+    "credit card points",
+    "airline miles",
+    "hotel loyalty programs", 
+    "travel hacking",
+    "points and miles",
+    "travel deals",
+    "reward credit cards",
+    "frequent flyer programs",
+    "hotel points"
+  ],
+  authors: [{ name: "Max Your Points Team" }],
+  creator: "Max Your Points",
+  publisher: "Max Your Points",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com',
+    siteName: 'Max Your Points',
+    title: "Max Your Points – Travel Smarter, Earn More",
+    description: "Expert strategies on travel points, flight and hotel reviews, and maximizing rewards programs. Learn how to travel better for less.",
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/travel-rewards-cards.png`,
+        width: 1200,
+        height: 630,
+        alt: 'Max Your Points - Travel Rewards and Points Optimization',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@maxyourpoints',
+    creator: '@maxyourpoints',
+    title: "Max Your Points – Travel Smarter, Earn More",
+    description: "Expert strategies on travel points, flight and hotel reviews, and maximizing rewards programs.",
+    images: [`${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/travel-rewards-cards.png`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com',
+    types: {
+      'application/rss+xml': [
+        { url: `${process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'}/feed.xml`, title: 'Max Your Points RSS Feed' }
+      ]
+    }
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
+    yahoo: process.env.YAHOO_VERIFICATION,
+    other: {
+      'msvalidate.01': process.env.BING_VERIFICATION || '',
+    },
+  },
+  category: 'Travel',
+  classification: 'Travel Rewards and Points Optimization',
+  other: {
+    'pinterest-rich-pins': 'true',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Max Your Points',
+    'application-name': 'Max Your Points',
+    'msapplication-TileColor': '#10B981',
+    'msapplication-config': '/browserconfig.xml',
+    'theme-color': '#10B981',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#D1F1EB',
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#10B981' },
+    { media: '(prefers-color-scheme: dark)', color: '#10B981' }
+  ],
 }
 
 const siteUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com'
@@ -36,12 +131,29 @@ const siteUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://maxyourpoints.com
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "url": "https://maxyourpoints.com",
-  "name": "MaxYourPoints",
+  "url": siteUrl,
+  "name": "Max Your Points",
+  "alternateName": "MaxYourPoints",
+  "description": "Expert travel rewards and points optimization strategies. Learn how to maximize credit card points, airline miles, and hotel rewards for better travel experiences.",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://maxyourpoints.com/search?q={search_term_string}",
+    "target": `${siteUrl}/blog?q={search_term_string}`,
     "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Max Your Points",
+    "url": siteUrl,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${siteUrl}/max_your_points-logo.png`,
+      "width": 400,
+      "height": 150
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": siteUrl
   }
 }
 
@@ -51,10 +163,39 @@ const organizationJsonLd = {
   "name": "Max Your Points",
   "url": siteUrl,
   "logo": `${siteUrl}/max_your_points-logo.png`,
-  "description": "Travel rewards and points optimization expert guidance.",
+  "description": "Travel rewards and points optimization expert guidance. Maximize your credit card points, airline miles, and hotel rewards.",
+  "foundingDate": "2024",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer service",
+    "url": `${siteUrl}/contact`
+  },
   "sameAs": [
     "https://twitter.com/maxyourpoints",
-    "https://facebook.com/maxyourpoints"
+    "https://facebook.com/maxyourpoints",
+    "https://linkedin.com/company/maxyourpoints"
+  ],
+  "knowsAbout": [
+    "Travel Rewards",
+    "Credit Card Points",
+    "Airline Miles",
+    "Hotel Loyalty Programs",
+    "Travel Hacking",
+    "Points and Miles",
+    "Travel Deals"
+  ]
+}
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": siteUrl
+    }
   ]
 }
 
@@ -63,10 +204,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Content Security Policy optimized for Safari compatibility
+  // Enhanced Content Security Policy
   const csp = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;
     style-src 'self' 'unsafe-inline' https: data:;
     img-src 'self' data: https: blob:;
     font-src 'self' https: data:;
@@ -78,10 +219,11 @@ export default function RootLayout({
     frame-ancestors 'none';
     worker-src 'self' blob:;
     child-src 'self' blob:;
+    manifest-src 'self';
   `.replace(/\s+/g, ' ').trim()
 
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
@@ -98,9 +240,9 @@ export default function RootLayout({
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         
         {/* Favicon */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/max_your_points_favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/max_your_points_favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/max_your_points_favicon.png" />
+        <link rel="icon" href="/max_your_points_favicon.png" sizes="any" />
+        <link rel="icon" href="/max_your_points_favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/max_your_points_favicon.png" />
         <link rel="shortcut icon" href="/max_your_points_favicon.png" />
         
         {/* Inline critical CSS for instant render */}
@@ -150,45 +292,35 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-      </head>
-      <body className="min-h-screen bg-background antialiased">
-        <Navbar />
-        <main className="pt-16">
-          {children}
-        </main>
-        <Footer />
-        <CookieConsentBanner />
-        <SpeedInsights />
-        <Analytics />
-        <Toaster position="bottom-right" />
-        
-        
-        {/* Minimal performance monitoring */}
         <Script
-          id="performance-monitor"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Resource prioritization only
-              const prioritizeResources = () => {
-                document.querySelectorAll('img[data-priority="high"]').forEach(img => {
-                  img.loading = 'eager';
-                  img.fetchpriority = 'high';
-                });
-                document.querySelectorAll('img:not([data-priority="high"])').forEach(img => {
-                  img.loading = 'lazy';
-                  img.decoding = 'async';
-                });
-              };
-              
-              if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', prioritizeResources);
-              } else {
-                prioritizeResources();
-              }
-            `
-          }}
+          id="breadcrumb-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
+      </head>
+      <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50`}>
+                 <ThemeProvider
+           attribute="class"
+           defaultTheme="light"
+           enableSystem={false}
+           disableTransitionOnChange
+         >
+           <AuthProvider>
+             <ToastProvider>
+               <div className="flex flex-col min-h-screen">
+                 <Navbar />
+                 <main className="flex-1 pt-16">
+                   {children}
+                 </main>
+                 <Footer />
+               </div>
+               <ArticleTracker />
+               <CookieConsentBanner />
+               <Toaster position="bottom-right" />
+               <SonnerToaster richColors position="top-right" />
+             </ToastProvider>
+           </AuthProvider>
+         </ThemeProvider>
       </body>
     </html>
   )

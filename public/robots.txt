@@ -1,4 +1,24 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://maxyourpoints.com/sitemap.xml 
+# Block admin and sensitive areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /unsubscribe/
+
+# Allow important public pages
+Allow: /blog/
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+
+# Sitemap location
+Sitemap: https://maxyourpoints.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Host directive (Google specific)
+Host: https://maxyourpoints.com 
