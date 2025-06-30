@@ -205,12 +205,6 @@ export const ADMIN_NAV_ITEMS = [
     href: '/admin/newsletter',
     icon: '📧',
     requiredPermissions: ['analytics:read'] as Permission[]
-  },
-  {
-    name: 'WordPress Migration',
-    href: '/admin/wordpress-migration',
-    icon: '⬆️',
-    requiredPermissions: ['users:create'] as Permission[]
   }
 ]
 

@@ -36,7 +36,7 @@ interface ErrorLog {
   errorStack?: string
 }
 
-export default function ArticleTracker({ 
+function ArticleTracker({ 
   articleSlug, 
   pageTitle = '',
   category = ''
@@ -373,4 +373,8 @@ function getOSName(userAgent: string): string {
   if (userAgent.includes('Android')) return 'Android'
   if (userAgent.includes('iOS')) return 'iOS'
   return 'Unknown'
-} 
+}
+
+// Export both as default and named export to fix import issues
+export default ArticleTracker
+export { ArticleTracker }
