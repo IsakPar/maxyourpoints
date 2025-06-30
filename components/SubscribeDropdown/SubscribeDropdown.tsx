@@ -51,7 +51,7 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
       if (response.ok && responseData.success) {
         if (responseData.alreadySubscribed) {
           // User is already subscribed
-          setMessage(responseData.message)
+          setMessage("You're already subscribed! Check your inbox for our latest updates. 📧")
           setMessageType("success")
           // Don't call onSuccess since they're already subscribed
           setTimeout(() => {
@@ -61,7 +61,7 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
           }, 3000)
         } else if (responseData.requiresConfirmation) {
           // User needs to confirm email
-          setMessage(responseData.message)
+          setMessage("Success! Please confirm via the link in your email. 📬")
           setMessageType("info")
           setTimeout(() => {
             onClose()
@@ -70,7 +70,7 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
           }, 4000)
         } else {
           // New subscription success
-          setMessage("Successfully subscribed! Please check your email.")
+          setMessage("Success! Please confirm via the link in your email. 📬")
           setMessageType("success")
           onSuccess(email)
           setTimeout(() => setEmail(""), 5000)
