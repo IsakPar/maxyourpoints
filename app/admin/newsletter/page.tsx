@@ -23,6 +23,7 @@ import {
   Monitor, Smartphone, Upload, Code, X
 } from "lucide-react"
 import { toast } from "sonner"
+import { getSiteUrl } from "@/lib/utils"
 
 interface Subscriber {
   id: string
@@ -438,6 +439,7 @@ export default function NewsletterAdminPage() {
     if (!selectedTemplate) return ''
     
     let html = selectedTemplate.html_content
+    const siteUrl = getSiteUrl()
     
     // Insert selected articles into template
     if (selectedArticles.length > 0) {
@@ -460,7 +462,7 @@ export default function NewsletterAdminPage() {
                 ${article.featured ? '<span style="background: #fbbf24; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">⭐ Featured</span>' : ''}
               </div>
               <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px; font-weight: bold; line-height: 1.3;">
-                <a href="https://maxyourpoints.com/blog/${article.slug}" style="text-decoration: none; color: #1f2937;">
+                <a href="${siteUrl}/blog/${article.slug}" style="text-decoration: none; color: #1f2937;">
                   ${article.title}
                 </a>
               </h3>
@@ -468,7 +470,7 @@ export default function NewsletterAdminPage() {
                 ${article.excerpt || article.content.substring(0, 150) + '...'}
               </p>
               <div style="display: flex; align-items: center; justify-content: space-between;">
-                <a href="https://maxyourpoints.com/blog/${article.slug}" 
+                <a href="${siteUrl}/blog/${article.slug}" 
                    style="display: inline-block; background: linear-gradient(135deg, #0f766e 0%, #059669 100%); 
                           color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; 
                           font-weight: bold; font-size: 14px; transition: transform 0.2s;">
@@ -732,6 +734,7 @@ export default function NewsletterAdminPage() {
   const importExistingTemplates = async () => {
     try {
       setLoading(true)
+      const siteUrl = getSiteUrl()
       
       // Import subscription confirmation template
       const subscriptionTemplate = {
@@ -836,7 +839,7 @@ export default function NewsletterAdminPage() {
                 <p style="color: #d1fae5; margin: 0 0 20px 0; font-size: 16px;">
                   Your first mission: Check out our latest travel hacks that could save you THOUSANDS!
                 </p>
-                <a href="https://maxyourpoints.com/blog" style="display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <a href="${siteUrl}/blog" style="display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                   Let's Go! 🎯
                 </a>
               </div>
@@ -859,7 +862,7 @@ export default function NewsletterAdminPage() {
               <p style="margin: 0 0 5px 0;">You're receiving this because you just joined the coolest travel community on Earth! 🌍</p>
               <p style="margin: 0;">
                 <a href="{{unsubscribe_url}}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> | 
-                <a href="https://maxyourpoints.com" style="color: #6b7280; text-decoration: underline;">Visit Website</a> | 
+                <a href="${siteUrl}" style="color: #6b7280; text-decoration: underline;">Visit Website</a> | 
                 <a href="https://x.com/max_your_points" style="color: #6b7280; text-decoration: underline;">Follow on X</a>
               </p>
             </div>
@@ -887,7 +890,7 @@ export default function NewsletterAdminPage() {
             
             <p>We're sorry to see you go! You have been successfully unsubscribed from the Max Your Points newsletter.</p>
             
-            <p>If you change your mind, you can always <a href="https://maxyourpoints.com" style="color: #0f766e; text-decoration: none; font-weight: bold;">visit our website</a> to subscribe again.</p>
+            <p>If you change your mind, you can always <a href="${siteUrl}" style="color: #0f766e; text-decoration: none; font-weight: bold;">visit our website</a> to subscribe again.</p>
             
             <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px;">
               <p style="margin: 0; font-size: 14px; color: #64748b;">

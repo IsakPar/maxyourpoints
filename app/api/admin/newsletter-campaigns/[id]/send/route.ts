@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { MailjetService } from '@/lib/email/resend'
+import { getSiteUrl } from '@/lib/utils'
 
 interface Subscriber {
   email: string
@@ -158,12 +159,13 @@ export async function POST(
     
     // Add campaign-specific data for airfare deals
     if (campaign.campaign_type === 'airfare_daily') {
+      const siteUrl = getSiteUrl()
       enhancedHtmlContent = enhancedHtmlContent.replace(/{{destination}}/g, 'Amazing Destinations')
       enhancedHtmlContent = enhancedHtmlContent.replace(/{{price}}/g, '299')
       enhancedHtmlContent = enhancedHtmlContent.replace(/{{origin}}/g, 'Major US Cities')
       enhancedHtmlContent = enhancedHtmlContent.replace(/{{dates}}/g, 'Various dates available')
       enhancedHtmlContent = enhancedHtmlContent.replace(/{{discount}}/g, '40')
-      enhancedHtmlContent = enhancedHtmlContent.replace(/{{booking_link}}/g, 'https://maxyourpoints.com/blog')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{booking_link}}/g, `${siteUrl}/blog`)
     }
 
     const mailjetService = new MailjetService()
@@ -187,7 +189,8 @@ export async function POST(
       const batchPromises = batch.map(async (subscriber) => {
         try {
           // Generate personalized unsubscribe URL
-          const unsubscribeUrl = `https://maxyourpoints.com/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
+          const siteUrl = getSiteUrl()
+          const unsubscribeUrl = `${siteUrl}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
           
           // Personalize email content
           const personalizedHtml = enhancedHtmlContent
@@ -317,10 +320,12 @@ function generateEnhancedEmailContent(
     return baseHtml.replace(/{{articles}}/g, '<p>No articles selected for this campaign.</p>')
   }
 
+  const siteUrl = getSiteUrl()
+
   // Generate article HTML based on campaign type
   const articlesHtml = articles.map(article => {
     const excerpt = article.summary || article.content?.substring(0, 150) + '...' || 'No excerpt available'
-    const readMoreUrl = `https://maxyourpoints.com/blog/${article.slug}`
+    const readMoreUrl = `${siteUrl}/blog/${article.slug}`
     
     if (campaign.campaign_type === 'weekly') {
       return `
@@ -370,13 +375,14 @@ function generateEnhancedEmailContent(
     enhancedHtml = enhancedHtml.replace(/{{origin}}/g, 'Major US Cities')
     enhancedHtml = enhancedHtml.replace(/{{dates}}/g, 'Various dates available')
     enhancedHtml = enhancedHtml.replace(/{{discount}}/g, '40')
-    enhancedHtml = enhancedHtml.replace(/{{booking_link}}/g, 'https://maxyourpoints.com/blog')
+    enhancedHtml = enhancedHtml.replace(/{{booking_link}}/g, `${siteUrl}/blog`)
   }
 
   return enhancedHtml
 }
 
 function generateTextVersion(subject: string, articles: Article[]): string {
+  const siteUrl = getSiteUrl()
   let textContent = `${subject}\n\n`
   
   textContent += 'Max Your Points Newsletter\n'
@@ -388,14 +394,14 @@ function generateTextVersion(subject: string, articles: Article[]): string {
       textContent += `${index + 1}. ${article.title}\n`
       const excerpt = article.summary || article.content?.substring(0, 100) + '...' || ''
       textContent += `   ${excerpt}\n`
-      textContent += `   Read more: https://maxyourpoints.com/blog/${article.slug}\n\n`
+      textContent += `   Read more: ${siteUrl}/blog/${article.slug}\n\n`
     })
   }
   
   textContent += '\n---\n'
   textContent += 'Max Your Points\n'
   textContent += 'Making travel dreams affordable, one point at a time.\n'
-  textContent += 'Visit: https://maxyourpoints.com\n'
+  textContent += `Visit: ${siteUrl}\n`
   textContent += 'Unsubscribe: {{unsubscribe_url}}\n'
   
   return textContent

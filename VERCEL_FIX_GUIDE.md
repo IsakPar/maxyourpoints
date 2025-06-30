@@ -15,7 +15,7 @@ Go to your Vercel dashboard and update these environment variables:
 # ❌ Wrong (current setting)
 NEXT_PUBLIC_SITE_URL=https://www.maxyourpoints.com
 
-# ✅ Correct (what it should be)
+# ✅ Correct (what it should be) - YOUR ACTUAL VERCEL URL
 NEXT_PUBLIC_SITE_URL=https://maxyourpoints-43is.vercel.app
 ```
 
@@ -23,77 +23,50 @@ NEXT_PUBLIC_SITE_URL=https://maxyourpoints-43is.vercel.app
 1. Go to https://vercel.com/dashboard
 2. Select your project (`max-your-points-clean`)
 3. Go to Settings → Environment Variables
-4. Find `NEXT_PUBLIC_SITE_URL` and update it to: `https://maxyourpoints-43is.vercel.app`
-5. Save and redeploy
+4. Find `NEXT_PUBLIC_SITE_URL` and click Edit
+5. Change the value to: `https://maxyourpoints-43is.vercel.app`
+6. Click Save
+7. Go to Deployments tab
+8. Click on the latest deployment → Click the three dots → Redeploy
 
-### **2. Verify the Fix**
+### **2. Verify The Fix**
 
-After updating the environment variable:
+After redeploying, test these URLs:
 
-1. **Redeploy your application:**
-   ```bash
-   # Push your changes to trigger a new deployment
-   git add .
-   git commit -m "Fix API URL configuration for Vercel"
-   git push origin main
-   ```
+✅ **Health Check:** https://maxyourpoints-43is.vercel.app/api/health
+✅ **Articles API:** https://maxyourpoints-43is.vercel.app/api/articles?limit=3  
+✅ **Individual Article:** https://maxyourpoints-43is.vercel.app/api/articles/airline-loyalty-programs-skyrocket-profits
+✅ **Home Page:** https://maxyourpoints-43is.vercel.app/
+✅ **Blog Article:** https://maxyourpoints-43is.vercel.app/blog/airline-loyalty-programs-skyrocket-profits
 
-2. **Test the health endpoint:**
-   Visit: `https://maxyourpoints-43is.vercel.app/api/health`
-   
-   You should see something like:
-   ```json
-   {
-     "status": "healthy",
-     "envInfo": {
-       "nodeEnv": "production",
-       "vercelUrl": "maxyourpoints-43is.vercel.app",
-       "publicSiteUrl": "https://maxyourpoints-43is.vercel.app"
-     }
-   }
-   ```
+### **3. Expected Results**
 
-3. **Test article fetching:**
-   Visit: `https://maxyourpoints-43is.vercel.app/api/articles?limit=5`
-   
-   You should see your articles in JSON format.
+After the fix:
+- ✅ Articles will show up on the main page
+- ✅ Individual blog posts will load correctly  
+- ✅ No more 404 errors in production logs
+- ✅ Blog cards will be fully clickable (already working)
 
-### **3. Additional Environment Variables to Check**
+## 🧪 **Current Status**
 
-Make sure these are also set correctly in Vercel:
+**API Tests (Working):**
+- Health: ✅ Returns environment info
+- Articles List: ✅ Returns 5 articles 
+- Individual Article: ✅ Returns article data
 
-```bash
-# Database
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+**Frontend Issues (To Fix):**
+- Environment variable pointing to wrong domain
+- Frontend making API calls to `https://www.maxyourpoints.com` instead of Vercel URL
 
-# Email (optional, for newsletters)
-MAILJET_API_KEY=your_mailjet_api_key
-MAILJET_SECRET_KEY=your_mailjet_secret_key
-MAILJET_FROM_EMAIL=newsletter@maxyourpoints.com
+## 🚨 **If This Doesn't Work**
 
-# Site URL (CRITICAL - must be correct)
-NEXT_PUBLIC_SITE_URL=https://maxyourpoints-43is.vercel.app
-```
+1. Check the Vercel deployment logs
+2. Verify the environment variable was actually saved
+3. Make sure you redeployed after changing the environment variable
+4. Clear your browser cache
+5. Test in an incognito window
 
-## 🧪 **Testing After the Fix**
-
-### **Test 1: Health Check**
-```bash
-curl https://maxyourpoints-43is.vercel.app/api/health
-```
-
-### **Test 2: Articles API**
-```bash
-curl https://maxyourpoints-43is.vercel.app/api/articles?limit=3
-```
-
-### **Test 3: Website Loading**
-Visit your website and check that:
-- ✅ Homepage loads with articles
-- ✅ Article pages load properly
-- ✅ Admin panel works (if logged in)
+The API works perfectly - this is purely an environment configuration issue!
 
 ## 🔧 **What We Fixed**
 

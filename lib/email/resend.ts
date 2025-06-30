@@ -1,4 +1,5 @@
 import Mailjet from 'node-mailjet'
+import { getSiteUrl } from '../utils'
 
 // Initialize Mailjet with API keys from environment
 const mailjet = process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY 
@@ -95,6 +96,7 @@ export class MailjetService {
 
   // Welcome email template
   async sendWelcomeEmail(email: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const siteUrl = getSiteUrl()
     const welcomeHtml = `
       <!DOCTYPE html>
       <html>
@@ -193,7 +195,7 @@ export class MailjetService {
                 <p style="color: #d1fae5; margin: 0 0 20px 0; font-size: 16px;">
                   Your first mission: Check out our latest travel hacks that could save you THOUSANDS!
                 </p>
-                <a href="https://maxyourpoints.com/blog" style="display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <a href="${siteUrl}/blog" style="display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                   Let's Go! 🎯
                 </a>
               </div>
@@ -216,7 +218,7 @@ export class MailjetService {
               <p style="margin: 0 0 5px 0;">You're receiving this because you just joined the coolest travel community on Earth! 🌍</p>
               <p style="margin: 0;">
                 <a href="{{unsubscribe_url}}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> | 
-                <a href="https://maxyourpoints.com" style="color: #6b7280; text-decoration: underline;">Visit Website</a> | 
+                <a href="${siteUrl}" style="color: #6b7280; text-decoration: underline;">Visit Website</a> | 
                 <a href="https://x.com/max_your_points" style="color: #6b7280; text-decoration: underline;">Follow on X</a>
               </p>
             </div>
@@ -251,7 +253,7 @@ Turn plastic into plane tickets faster than you can say "annual fee waived"!
 
 🚀 READY FOR TAKEOFF?
 Your first mission: Check out our latest travel hacks that could save you THOUSANDS!
-Visit: https://maxyourpoints.com/blog
+Visit: ${siteUrl}/blog
 
 P.S. - We promise our emails are more entertaining than airline safety videos and more useful than airport WiFi! 📶
 
@@ -261,7 +263,7 @@ The Max Your Points Crew 🛩️
 ---
 You're receiving this because you just joined the coolest travel community on Earth! 🌍
 Unsubscribe: {{unsubscribe_url}}
-Website: https://maxyourpoints.com
+Website: ${siteUrl}
     `
 
     return this.sendEmail({
@@ -275,6 +277,7 @@ Website: https://maxyourpoints.com
 
   // Unsubscribe confirmation email
   async sendUnsubscribeConfirmation(email: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const siteUrl = getSiteUrl()
     const unsubscribeHtml = `
       <!DOCTYPE html>
       <html>
@@ -288,7 +291,7 @@ Website: https://maxyourpoints.com
             
             <p>We're sorry to see you go! You have been successfully unsubscribed from the Max Your Points newsletter.</p>
             
-            <p>If you change your mind, you can always <a href="https://maxyourpoints.com" style="color: #0f766e; text-decoration: none; font-weight: bold;">visit our website</a> to subscribe again.</p>
+            <p>If you change your mind, you can always <a href="${siteUrl}" style="color: #0f766e; text-decoration: none; font-weight: bold;">visit our website</a> to subscribe again.</p>
             
             <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px;">
               <p style="margin: 0; font-size: 14px; color: #64748b;">
@@ -308,7 +311,7 @@ You've been unsubscribed from Max Your Points
 
 We're sorry to see you go! You have been successfully unsubscribed from the Max Your Points newsletter.
 
-If you change your mind, you can always visit our website to subscribe again: https://maxyourpoints.com
+If you change your mind, you can always visit our website to subscribe again: ${siteUrl}
 
 If this was a mistake or you have any questions, please contact us at support@maxyourpoints.com
 

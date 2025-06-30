@@ -1,3 +1,5 @@
+import { getSiteUrl } from '../utils'
+
 interface MailgunConfig {
   apiKey: string
   domain: string
@@ -80,7 +82,8 @@ export class MailgunService {
   }
 
   private getSubscriptionConfirmationHTML(email: string): string {
-    const unsubscribeUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}/unsubscribe`
+    const siteUrl = getSiteUrl()
+    const unsubscribeUrl = `${siteUrl}/unsubscribe`
     
     return `
     <!DOCTYPE html>
@@ -124,14 +127,14 @@ export class MailgunService {
         <p>Have any questions? Just reply to this email - we'd love to hear from you!</p>
         
         <p style="margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}" class="button">Visit Max Your Points</a>
+          <a href="${siteUrl}" class="button">Visit Max Your Points</a>
         </p>
       </div>
       
       <div class="footer">
         <p>You're receiving this because you subscribed to Max Your Points newsletter.</p>
         <p>Email: ${email}</p>
-        <p><a href="${unsubscribeUrl}" style="color: #14b8a6;">Unsubscribe</a> | <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}/privacy-policy" style="color: #14b8a6;">Privacy Policy</a></p>
+        <p><a href="${unsubscribeUrl}" style="color: #14b8a6;">Unsubscribe</a> | <a href="${siteUrl}/privacy-policy" style="color: #14b8a6;">Privacy Policy</a></p>
         <p>Max Your Points Team<br>Making every point count!</p>
       </div>
     </body>
@@ -140,7 +143,8 @@ export class MailgunService {
   }
 
   private getSubscriptionConfirmationText(email: string): string {
-    const unsubscribeUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}/unsubscribe`
+    const siteUrl = getSiteUrl()
+    const unsubscribeUrl = `${siteUrl}/unsubscribe`
     
     return `
 Welcome to Max Your Points! 🎉
@@ -158,12 +162,12 @@ We'll send you carefully curated content to help you maximize your travel reward
 
 Have any questions? Just reply to this email - we'd love to hear from you!
 
-Visit us: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}
+Visit us: ${siteUrl}
 
 You're receiving this because you subscribed to Max Your Points newsletter.
 Email: ${email}
 Unsubscribe: ${unsubscribeUrl}
-Privacy Policy: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'}/privacy-policy
+Privacy Policy: ${siteUrl}/privacy-policy
 
 Max Your Points Team
 Making every point count!

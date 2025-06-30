@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mailjetService } from '@/lib/email/resend'
+import { getSiteUrl } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,17 +51,18 @@ export async function GET(request: NextRequest) {
     let emailResult
     if (template) {
       // Use the beautiful custom template
+      const siteUrl = getSiteUrl()
       const emailHtml = template.html_content
         .replace(/{{subscriber_name}}/g, email.split('@')[0])
         .replace(/{{subscriber_email}}/g, email)
-        .replace(/{{resubscribe_url}}/g, 'https://maxyourpoints.com')
+        .replace(/{{resubscribe_url}}/g, siteUrl)
       
       emailResult = await mailjetService.sendEmail({
         to: email,
         from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
         subject: template.subject || 'Goodbye from Max Your Points',
         html: emailHtml,
-        text: `You've been unsubscribed from Max Your Points newsletter.\n\nIf this was a mistake, you can resubscribe at: https://maxyourpoints.com`
+        text: `You've been unsubscribed from Max Your Points newsletter.\n\nIf this was a mistake, you can resubscribe at: ${siteUrl}`
       })
     } else {
       // Fallback to original method
@@ -137,17 +139,18 @@ export async function POST(request: Request) {
     let emailResult
     if (template) {
       // Use the beautiful custom template
+      const siteUrl = getSiteUrl()
       const emailHtml = template.html_content
         .replace(/{{subscriber_name}}/g, email.split('@')[0])
         .replace(/{{subscriber_email}}/g, email)
-        .replace(/{{resubscribe_url}}/g, 'https://maxyourpoints.com')
+        .replace(/{{resubscribe_url}}/g, siteUrl)
       
       emailResult = await mailjetService.sendEmail({
         to: email,
         from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
         subject: template.subject || 'Goodbye from Max Your Points',
         html: emailHtml,
-        text: `You've been unsubscribed from Max Your Points newsletter.\n\nIf this was a mistake, you can resubscribe at: https://maxyourpoints.com`
+        text: `You've been unsubscribed from Max Your Points newsletter.\n\nIf this was a mistake, you can resubscribe at: ${siteUrl}`
       })
     } else {
       // Fallback to original method

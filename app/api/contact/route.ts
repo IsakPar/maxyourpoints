@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MailjetService } from '@/lib/email/resend'
 import { contactFormLimiter } from '@/lib/rate-limit'
+import { getSiteUrl } from '@/lib/utils'
 
 interface ContactFormData {
   name: string
@@ -127,6 +128,7 @@ Reply directly to this email to respond to ${name}.
     }
 
     // Send confirmation email to the user
+    const siteUrl = getSiteUrl()
     const userConfirmationHtml = `
       <!DOCTYPE html>
       <html>
@@ -152,9 +154,9 @@ Reply directly to this email to respond to ${name}.
             
             <p>While you're waiting for our response, feel free to:</p>
             <ul style="color: #4a5568;">
-              <li>🔗 <a href="https://maxyourpoints.com/blog" style="color: #0f766e; text-decoration: none;">Browse our latest travel tips</a></li>
+              <li>🔗 <a href="${siteUrl}/blog" style="color: #0f766e; text-decoration: none;">Browse our latest travel tips</a></li>
               <li>🐦 <a href="https://twitter.com/maxyourpoints" style="color: #0f766e; text-decoration: none;">Follow us on X for real-time deals</a></li>
-              <li>💳 <a href="https://maxyourpoints.com/blog/categories/credit-cards-and-points" style="color: #0f766e; text-decoration: none;">Check out our credit card guides</a></li>
+              <li>💳 <a href="${siteUrl}/blog/categories/credit-cards-and-points" style="color: #0f766e; text-decoration: none;">Check out our credit card guides</a></li>
             </ul>
             
             <p>Thanks again for being part of the Max Your Points community!</p>
@@ -182,9 +184,9 @@ Subject: ${subject}
 Submitted on: ${new Date().toLocaleDateString()}
 
 While you're waiting for our response, feel free to:
-• Browse our latest travel tips: https://maxyourpoints.com/blog
+• Browse our latest travel tips: ${siteUrl}/blog
 • Follow us on X for real-time deals: https://twitter.com/maxyourpoints  
-• Check out our credit card guides: https://maxyourpoints.com/blog/categories/credit-cards-and-points
+• Check out our credit card guides: ${siteUrl}/blog/categories/credit-cards-and-points
 
 Thanks again for being part of the Max Your Points community!
 
