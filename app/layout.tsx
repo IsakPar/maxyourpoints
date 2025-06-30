@@ -6,8 +6,6 @@ import Footer from "@/components/Footer/Footer"
 import { CookieConsentBanner } from "@/components/CookieConsentBanner"
 import { AuthProvider } from "@/app/providers/auth-provider"
 import Script from "next/script"
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from 'react-hot-toast'
 import { Toaster as SonnerToaster } from 'sonner'
 import { PERFORMANCE_HINTS, CRITICAL_CSS } from "@/lib/performance"

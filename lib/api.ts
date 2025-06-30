@@ -68,16 +68,19 @@ class APIClient {
       // Server-side: determine the base URL based on environment
       let baseUrl: string;
       
-      if (process.env.VERCEL_URL) {
+      // Always use localhost for development (NODE_ENV !== 'production')
+      if (process.env.NODE_ENV !== 'production') {
+        const port = process.env.PORT || '3001';
+        baseUrl = `http://localhost:${port}`;
+      } else if (process.env.VERCEL_URL) {
         // Production/Preview on Vercel
         baseUrl = `https://${process.env.VERCEL_URL}`;
       } else if (process.env.NEXT_PUBLIC_SITE_URL) {
         // Custom domain
         baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
       } else {
-        // Local development fallback
-        const port = process.env.PORT || '3001';
-        baseUrl = `http://localhost:${port}`;
+        // For build time, use a placeholder - will be replaced by relative URLs in production
+        baseUrl = 'http://localhost:3000';
       }
       
       url = `${baseUrl}/api${endpoint}`;

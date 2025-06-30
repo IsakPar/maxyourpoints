@@ -4,6 +4,9 @@ import AdminNavbar from './components/AdminNavbar'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { Toaster } from 'sonner'
 
+// Force dynamic rendering for admin routes
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({
   children,
 }: {

@@ -1,8 +1,9 @@
 "use client"
+
+import React from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { Button } from "./ui/button"
-import { useRouter } from "next/navigation"
 
 interface CategoryTagProps {
   children: React.ReactNode
@@ -27,17 +28,9 @@ interface BlogPostProps {
 // Update the BlogPost component to make the entire card clickable with hover effect
 const BlogPost = ({ post }: BlogPostProps) => {
   const { title, summary, category, readTime, image, slug } = post
-  const router = useRouter()
-
-  const handleCardClick = () => {
-    router.push(slug)
-  }
 
   return (
-    <div
-      className="flex-1 flex flex-col md:flex-row justify-start items-start md:items-start gap-4 md:gap-8 p-4 rounded-lg transition-all duration-300 hover:shadow-elevation cursor-pointer bg-transparent"
-      onClick={handleCardClick}
-    >
+    <Link href={slug} className="flex-1 flex flex-col md:flex-row justify-start items-start md:items-start gap-4 md:gap-8 p-4 rounded-lg transition-all duration-300 hover:shadow-elevation cursor-pointer bg-transparent">
       <div className="w-full md:w-2/5 h-48 md:h-64 flex-shrink-0 overflow-hidden rounded-md">
         <img src={image || "/placeholder.svg"} alt={title} className="w-full h-full object-cover" />
       </div>
@@ -56,17 +49,12 @@ const BlogPost = ({ post }: BlogPostProps) => {
             </p>
           </div>
         </div>
-        <div
-          className="rounded-xl inline-flex justify-center items-center gap-2 text-stone-950 hover:text-orange-500 transition-colors"
-          onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
-        >
-          <Link href={slug} className="inline-flex items-center gap-2">
-            <span className="text-base font-bold font-['Inter'] leading-normal">Read more</span>
-            <ChevronRight size={24} />
-          </Link>
+        <div className="rounded-xl inline-flex justify-center items-center gap-2 text-stone-950 hover:text-orange-500 transition-colors">
+          <span className="text-base font-bold font-['Inter'] leading-normal">Read more</span>
+          <ChevronRight size={24} />
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
