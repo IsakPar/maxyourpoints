@@ -65,9 +65,21 @@ class APIClient {
       // Client-side: use relative URLs (automatically uses current port)
       url = `/api${endpoint}`;
     } else {
-      // Server-side: use absolute URL with dynamic port detection
-      const port = process.env.PORT || '3001'; // Use actual PORT env var or default to 3001
-      const baseUrl = `http://localhost:${port}`;
+      // Server-side: determine the base URL based on environment
+      let baseUrl: string;
+      
+      if (process.env.VERCEL_URL) {
+        // Production/Preview on Vercel
+        baseUrl = `https://${process.env.VERCEL_URL}`;
+      } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+        // Custom domain
+        baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      } else {
+        // Local development fallback
+        const port = process.env.PORT || '3001';
+        baseUrl = `http://localhost:${port}`;
+      }
+      
       url = `${baseUrl}/api${endpoint}`;
     }
     
