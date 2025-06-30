@@ -33,138 +33,85 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Check if email already exists
-    const { data: existingSubscriber } = await supabase
-      .from('newsletter_subscribers')
-      .select('*')
-      .eq('email', email)
-      .single()
-
-    let confirmationToken: string = ''
-
-    if (existingSubscriber) {
-      if (existingSubscriber.status === 'confirmed') {
-        return NextResponse.json({ 
-          success: true,
-          alreadySubscribed: true,
-          message: "Great news! You're already part of our Max Your Points community! 🎉",
-          details: "You're all set to receive our latest travel tips, deals, and point strategies."
-        })
-      }
-      
-      if (existingSubscriber.status === 'pending') {
-        return NextResponse.json({ 
-          success: true,
-          requiresConfirmation: true,
-          message: 'Almost there! Please check your email and confirm your subscription.',
-          details: "We've sent you a confirmation link. Click it to start receiving our newsletter!"
-        })
-      }
-    }
-
-    // TEMPORARY: Use direct SQL instead of the broken function
-    // Generate a confirmation token
-    const crypto = require('crypto')
-    confirmationToken = crypto.randomBytes(32).toString('hex')
-    
-    // Insert subscriber directly
-    const { data: insertResult, error } = await supabase
-      .from('newsletter_subscribers')
-      .insert({
-        email: email,
-        status: 'pending',
-        source: 'website',
-        confirmation_token: confirmationToken,
-        confirmation_sent_at: new Date().toISOString(),
-        subscribed_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+    // Use the proper database function to avoid column ambiguity
+    const { data: subscriptionResult, error } = await supabase
+      .rpc('create_subscriber_with_confirmation', {
+        p_email: email,
+        p_source: 'website'
       })
-      .select('id, email, status')
-      .single()
 
     if (error) {
       console.error('Database error:', error)
-      
-      // Check if it's a duplicate email error
-      if (error.code === '23505') {
-        // Email already exists - this is fine, we'll handle it gracefully
-        console.log('📧 Email already exists, checking status...')
+      return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
+    }
+
+    if (!subscriptionResult || subscriptionResult.length === 0) {
+      return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
+    }
+
+    const result = subscriptionResult[0]
+    console.log('✅ Subscription result:', result)
+
+    // Handle different subscription states
+    if (result.status === 'confirmed') {
+      return NextResponse.json({ 
+        success: true,
+        alreadySubscribed: true,
+        message: "Great news! You're already part of our Max Your Points community! 🎉",
+        details: "You're all set to receive our latest travel tips, deals, and point strategies."
+      })
+    }
+
+    // For pending status, send confirmation email
+    if (result.status === 'pending' && result.confirmation_token) {
+      try {
+        const mailjetService = new MailjetService()
         
-        const { data: existingUser } = await supabase
-          .from('newsletter_subscribers')
-          .select('*')
-          .eq('email', email)
-          .single()
+        // Generate confirmation URL
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'
+        const confirmationUrl = `${baseUrl}/api/confirm-email?token=${result.confirmation_token}`
         
-        if (existingUser?.status === 'confirmed') {
-          return NextResponse.json({
-            success: true,
-            alreadySubscribed: true,
-            message: "Great news! You're already part of our Max Your Points community! 🎉",
-            details: "You're all set to receive our latest travel tips, deals, and point strategies."
-          })
-        } else if (existingUser?.status === 'pending') {
-          // Update with new token
-          confirmationToken = crypto.randomBytes(32).toString('hex')
-          await supabase
-            .from('newsletter_subscribers')
-            .update({
-              confirmation_token: confirmationToken,
-              confirmation_sent_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('email', email)
-          
-          // Continue with sending email...
-        }
-      } else {
-        return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
+        const emailSubject = '✉️ Please confirm your subscription to Max Your Points'
+        const emailHtml = generateConfirmationEmail(email, confirmationUrl)
+
+        console.log('📧 Sending confirmation email via Mailjet to:', email)
+        
+        const emailResult = await mailjetService.sendEmail({
+          to: email,
+          from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
+          subject: emailSubject,
+          html: emailHtml,
+          text: `Please confirm your subscription to Max Your Points!\n\nClick this link to confirm: ${confirmationUrl}\n\nThis link will expire in 7 days.`
+        })
+
+        console.log('✅ Confirmation email sent successfully:', emailResult.messageId)
+
+        return NextResponse.json({ 
+          success: true,
+          requiresConfirmation: true,
+          message: 'Please check your email and click the confirmation link to complete your subscription.',
+          details: 'We\'ve sent you a confirmation email with a link to activate your subscription.',
+          messageId: emailResult.messageId
+        })
+
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError)
+        return NextResponse.json({ 
+          success: true,
+          requiresConfirmation: true,
+          message: 'Subscription created but confirmation email could not be sent. Please contact support.',
+          details: 'Your subscription is pending email confirmation.'
+        })
       }
     }
 
-    console.log('✅ New subscriber created with confirmation token:', email)
-
-    // Send confirmation email
-    try {
-      const mailjetService = new MailjetService()
-      
-      // Generate confirmation URL
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'
-      const confirmationUrl = `${baseUrl}/api/confirm-email?token=${confirmationToken}`
-      
-      const emailSubject = '✉️ Please confirm your subscription to Max Your Points'
-      const emailHtml = generateConfirmationEmail(email, confirmationUrl)
-
-      console.log('📧 Sending confirmation email via Mailjet to:', email)
-      
-      const emailResult = await mailjetService.sendEmail({
-        to: email,
-        from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
-        subject: emailSubject,
-        html: emailHtml,
-        text: `Please confirm your subscription to Max Your Points!\n\nClick this link to confirm: ${confirmationUrl}\n\nThis link will expire in 7 days.`
-      })
-
-      console.log('✅ Confirmation email sent successfully:', emailResult.messageId)
-
-      return NextResponse.json({ 
-        success: true,
-        requiresConfirmation: true,
-        message: 'Please check your email and click the confirmation link to complete your subscription.',
-        details: 'We\'ve sent you a confirmation email with a link to activate your subscription.',
-        messageId: emailResult.messageId
-      })
-
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError)
-      return NextResponse.json({ 
-        success: true,
-        requiresConfirmation: true,
-        message: 'Subscription created but confirmation email could not be sent. Please contact support.',
-        details: 'Your subscription is pending email confirmation.'
-      })
-    }
+    // Default response for other cases
+    return NextResponse.json({ 
+      success: true,
+      requiresConfirmation: true,
+      message: 'Please check your email and confirm your subscription.',
+      details: "We've sent you a confirmation link. Click it to start receiving our newsletter!"
+    })
 
   } catch (error) {
     console.error('Subscription error:', error)
