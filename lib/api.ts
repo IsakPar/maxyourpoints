@@ -51,6 +51,11 @@ import { getApiBaseUrl } from './utils';
 
 // Helper function to get the correct base URL for API calls
 function getBaseURL(): string {
+  // For client-side requests, always use relative paths
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  // For server-side requests, use the API base URL
   return getApiBaseUrl();
 }
 
