@@ -63,6 +63,17 @@ interface EmailTemplate {
   updated_at: string
 }
 
+interface SubscriberList {
+  id: string
+  name: string
+  description: string
+  list_type: string
+  is_active: boolean
+  subscriber_count: number
+  created_at: string
+  updated_at: string
+}
+
 interface Article {
   id: string
   title: string
@@ -77,6 +88,8 @@ interface Article {
   subcategory?: string
   author_name?: string
   featured_image?: string
+  status?: string // Keep for transformation compatibility
+  categories?: { slug: string } // Keep for transformation compatibility
 }
 
 export default function NewsletterAdminPage() {
@@ -85,6 +98,7 @@ export default function NewsletterAdminPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [articles, setArticles] = useState<Article[]>([])
+  const [subscriberLists, setSubscriberLists] = useState<SubscriberList[]>([])
   const [stats, setStats] = useState({
     total: 0,
     confirmed: 0,
@@ -97,8 +111,9 @@ export default function NewsletterAdminPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'all' | 'confirmed' | 'pending' | 'unsubscribed'>('all')
 
-  // Enhanced campaign creation
+  // Enhanced campaign creation and editing
   const [showCampaignDialog, setShowCampaignDialog] = useState(false)
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null)
   const [selectedArticles, setSelectedArticles] = useState<string[]>([])
   const [selectedTargetDate, setSelectedTargetDate] = useState<Date | undefined>()
@@ -112,7 +127,9 @@ export default function NewsletterAdminPage() {
     scheduled_at: '',
     target_date: '',
     send_immediately: false,
-    template_id: ''
+    template_id: '',
+    target_list_id: '',
+    target_all_subscribers: true
   })
 
   // Email Preview State
@@ -183,7 +200,8 @@ export default function NewsletterAdminPage() {
         fetchSubscribers(),
         fetchCampaigns(),
         fetchTemplates(),
-        fetchArticles()
+        fetchArticles(),
+        fetchSubscriberLists()
       ])
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -243,10 +261,35 @@ export default function NewsletterAdminPage() {
       const response = await fetch('/api/articles')
       if (response.ok) {
         const data = await response.json()
-        setArticles(data.articles || [])
+        console.log('📧 Newsletter - Fetched articles data:', data)
+        console.log('📧 Newsletter - Articles array:', data.articles)
+        console.log('📧 Newsletter - Sample article:', data.articles?.[0])
+        // Transform the data to match our interface by mapping status to published
+        const transformedArticles = (data.articles || []).map((article: any) => ({
+          ...article,
+          published: article.status === 'published',
+          featured: article.featured_main || article.featured_category,
+          excerpt: article.summary,
+          category: article.categories?.slug || '',
+          featured_image: article.hero_image_url
+        }))
+        console.log('📧 Newsletter - Transformed articles:', transformedArticles.length)
+        setArticles(transformedArticles)
       }
     } catch (error) {
       console.error('Error fetching articles:', error)
+    }
+  }
+
+  const fetchSubscriberLists = async () => {
+    try {
+      const response = await fetch('/api/admin/newsletter-subscriber-lists')
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriberLists(data.lists || [])
+      }
+    } catch (error) {
+      console.error('Error fetching subscriber lists:', error)
     }
   }
 
@@ -403,20 +446,43 @@ export default function NewsletterAdminPage() {
         if (!article) return ''
         
         return `
-          <div style="margin: 20px 0; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
-            <h3 style="margin: 0 0 10px 0; color: #1f2937;">
-              <a href="https://maxyourpoints.com/blog/${article.slug}" style="text-decoration: none; color: #1f2937;">
-                ${article.title}
-              </a>
-            </h3>
-            <p style="margin: 0 0 15px 0; color: #6b7280; line-height: 1.5;">
-              ${article.excerpt}
-            </p>
-            <a href="https://maxyourpoints.com/blog/${article.slug}" 
-               style="display: inline-block; background: #0f766e; color: white; padding: 8px 16px; 
-                      border-radius: 4px; text-decoration: none; font-weight: bold;">
-              Read More →
-            </a>
+          <div style="margin: 20px 0; padding: 0; background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            ${article.featured_image ? `
+              <img src="${article.featured_image}" 
+                   alt="${article.title}" 
+                   style="width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid #e5e7eb;">
+            ` : ''}
+            <div style="padding: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="background: #0f766e; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                  ${article.category.replace('-', ' ')}
+                </span>
+                ${article.featured ? '<span style="background: #fbbf24; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">⭐ Featured</span>' : ''}
+              </div>
+              <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px; font-weight: bold; line-height: 1.3;">
+                <a href="https://maxyourpoints.com/blog/${article.slug}" style="text-decoration: none; color: #1f2937;">
+                  ${article.title}
+                </a>
+              </h3>
+              <p style="margin: 0 0 16px 0; color: #6b7280; line-height: 1.6; font-size: 14px;">
+                ${article.excerpt || article.content.substring(0, 150) + '...'}
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <a href="https://maxyourpoints.com/blog/${article.slug}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #0f766e 0%, #059669 100%); 
+                          color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; 
+                          font-weight: bold; font-size: 14px; transition: transform 0.2s;">
+                  Read Full Article →
+                </a>
+                <span style="color: #9ca3af; font-size: 12px;">
+                  ${new Date(article.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
         `
       }).join('')
@@ -504,30 +570,67 @@ export default function NewsletterAdminPage() {
       // Convert selected date to string format
       const targetDate = selectedTargetDate ? selectedTargetDate.toISOString().split('T')[0] : ''
 
-      const response = await fetch('/api/admin/newsletter-campaigns', {
-        method: 'POST',
+      const url = editingCampaign 
+        ? `/api/admin/newsletter-campaigns/${editingCampaign.id}` 
+        : '/api/admin/newsletter-campaigns'
+      
+      const method = editingCampaign ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...campaignForm,
           target_date: targetDate,
           html_content: htmlContent,
-          selected_articles: selectedArticles
+          selected_articles: selectedArticles,
+          target_list_id: campaignForm.target_all_subscribers ? null : campaignForm.target_list_id,
+          target_all_subscribers: campaignForm.target_all_subscribers
         })
       })
 
-      if (!response.ok) throw new Error('Failed to create campaign')
+      if (!response.ok) throw new Error(`Failed to ${editingCampaign ? 'update' : 'create'} campaign`)
 
-      toast.success('Campaign created successfully with selected articles!')
+      toast.success(`Campaign ${editingCampaign ? 'updated' : 'created'} successfully with selected articles!`)
       resetCampaignForm()
       fetchCampaigns()
     } catch (error) {
-      console.error('Error creating campaign:', error)
-      toast.error('Failed to create campaign')
+      console.error(`Error ${editingCampaign ? 'updating' : 'creating'} campaign:`, error)
+      toast.error(`Failed to ${editingCampaign ? 'update' : 'create'} campaign`)
     }
+  }
+
+  const openCampaignEdit = (campaign: Campaign) => {
+    setEditingCampaign(campaign)
+    setCampaignForm({
+      name: campaign.name,
+      subject: campaign.subject,
+      content: campaign.content || '',
+      description: campaign.description || '',
+      campaign_type: campaign.campaign_type,
+      template_type: campaign.template_type,
+      scheduled_at: campaign.scheduled_at || '',
+      target_date: campaign.target_date || '',
+      send_immediately: false,
+      template_id: '',
+      target_list_id: (campaign as any).target_list_id || '',
+      target_all_subscribers: (campaign as any).target_all_subscribers !== false
+    })
+    
+    // Parse selected articles from campaign if available
+    // This would require storing article IDs in the campaign
+    setSelectedArticles([])
+    
+    if (campaign.target_date) {
+      setSelectedTargetDate(new Date(campaign.target_date))
+    }
+    
+    setShowCampaignDialog(true)
   }
 
   const resetCampaignForm = () => {
     setShowCampaignDialog(false)
+    setEditingCampaign(null)
     setSelectedTemplate(null)
     setSelectedArticles([])
     setSelectedTargetDate(undefined)
@@ -541,7 +644,9 @@ export default function NewsletterAdminPage() {
       scheduled_at: '',
       target_date: '',
       send_immediately: false,
-      template_id: ''
+      template_id: '',
+      target_list_id: '',
+      target_all_subscribers: true
     })
   }
 
@@ -919,25 +1024,29 @@ export default function NewsletterAdminPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="min-h-screen bg-gray-50/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-gray-50/30">
+      {/* Main Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -999,8 +1108,9 @@ export default function NewsletterAdminPage() {
         </Card>
       </div>
 
-      {/* Enhanced Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Enhanced Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 p-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="subscribers" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -1025,10 +1135,23 @@ export default function NewsletterAdminPage() {
                   <Users className="w-5 h-5" />
                   Newsletter Subscribers
                 </span>
-                <Button onClick={exportSubscribers} variant="outline" className="flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => {
+                      fetchData()
+                      toast.success('Subscriber data refreshed!')
+                    }} 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    Refresh
+                  </Button>
+                  <Button onClick={exportSubscribers} variant="outline" className="flex items-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Export CSV
+                  </Button>
+                </div>
               </CardTitle>
           </CardHeader>
             <CardContent className="space-y-4">
@@ -1098,7 +1221,7 @@ export default function NewsletterAdminPage() {
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-purple-600" />
-                        Create New Campaign
+                        {editingCampaign ? 'Edit Campaign' : 'Create New Campaign'}
                       </DialogTitle>
                     </DialogHeader>
                     
@@ -1198,28 +1321,28 @@ export default function NewsletterAdminPage() {
                             Select Articles for Campaign
                           </Label>
                           <Badge variant="outline" className="text-xs">
-                            {selectedArticles.length} selected
+                            {selectedArticles.length} of {articles.filter(article => article.published).length} selected
                           </Badge>
                         </div>
                         
-                        {campaignForm.campaign_type !== 'custom' && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4" />
-                              Smart Suggestions
-                            </h4>
-                            <p className="text-sm text-blue-700 mb-3">
-                              {campaignForm.campaign_type === 'weekly' 
-                                ? "Articles from the past week, prioritizing featured content for your weekly digest."
-                                : "Recent travel deals and airfare-related articles perfect for daily alerts."
-                              }
-                            </p>
-                          </div>
-                        )}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            All Published Articles
+                          </h4>
+                          <p className="text-sm text-blue-700 mb-3">
+                            Select articles to include in your campaign. Articles are sorted by publish date (newest first).
+                            {campaignForm.campaign_type === 'weekly' && " For weekly newsletters, consider selecting recent articles from the past week."}
+                            {campaignForm.campaign_type === 'airfare_daily' && " For daily alerts, focus on travel deals and airline content."}
+                          </p>
+                        </div>
 
                         <ScrollArea className="h-64 border rounded-lg p-4">
                           <div className="space-y-3">
-                            {smartSuggestions.articles.map((article) => (
+                            {articles
+                              .filter(article => article.published)
+                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                              .map((article) => (
                               <div key={article.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 border">
                                 <Checkbox
                                   id={article.id}
@@ -1254,7 +1377,103 @@ export default function NewsletterAdminPage() {
                               </div>
                             ))}
                           </div>
+                          {articles.filter(article => article.published).length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                              <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                              <p>No published articles available</p>
+                            </div>
+                          )}
                         </ScrollArea>
+                      </div>
+
+                      <Separator />
+
+                      {/* Recipient Selection */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-lg font-semibold flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Select Recipients
+                          </Label>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="all-subscribers"
+                              checked={campaignForm.target_all_subscribers}
+                              onChange={() => setCampaignForm(prev => ({ ...prev, target_all_subscribers: true, target_list_id: '' }))}
+                              className="w-4 h-4"
+                            />
+                            <label htmlFor="all-subscribers" className="text-sm font-medium">
+                              All confirmed subscribers ({stats.confirmed})
+                            </label>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="specific-list"
+                                checked={!campaignForm.target_all_subscribers}
+                                onChange={() => setCampaignForm(prev => ({ ...prev, target_all_subscribers: false }))}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor="specific-list" className="text-sm font-medium">
+                                Specific subscriber list
+                              </label>
+                            </div>
+                            
+                            {!campaignForm.target_all_subscribers && (
+                              <div className="ml-6">
+                                <Select
+                                  value={campaignForm.target_list_id}
+                                  onValueChange={(value) => setCampaignForm(prev => ({ ...prev, target_list_id: value }))}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Choose a subscriber list" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {subscriberLists.map((list) => (
+                                      <SelectItem key={list.id} value={list.id}>
+                                        <div className="flex items-center justify-between w-full">
+                                          <span>{list.name}</span>
+                                          <Badge variant="outline" className="ml-2">
+                                            {list.subscriber_count} subscribers
+                                          </Badge>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                
+                                {subscriberLists.length === 0 && (
+                                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <p className="text-sm text-amber-800">
+                                      No subscriber lists found. <button 
+                                        onClick={async () => {
+                                          try {
+                                            const response = await fetch('/api/admin/setup-subscriber-lists', { method: 'POST' })
+                                            if (response.ok) {
+                                              await fetchSubscriberLists()
+                                              toast.success('Subscriber lists setup complete!')
+                                            }
+                                          } catch (error) {
+                                            toast.error('Failed to setup lists')
+                                          }
+                                        }}
+                                        className="text-amber-800 underline hover:text-amber-900"
+                                      >
+                                        Click here to set them up
+                                      </button>
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       <Separator />
@@ -1311,13 +1530,13 @@ export default function NewsletterAdminPage() {
                         <Button variant="outline" onClick={resetCampaignForm}>
                           Cancel
                         </Button>
-                <Button
+                                        <Button
                           onClick={handleCreateCampaign}
                           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                           disabled={!campaignForm.name || !campaignForm.subject || selectedArticles.length === 0}
                         >
                           <PlusCircle className="w-4 h-4 mr-2" />
-                          Create Campaign
+                          {editingCampaign ? 'Update Campaign' : 'Create Campaign'}
                         </Button>
                       </div>
                     </div>
@@ -1345,14 +1564,24 @@ export default function NewsletterAdminPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               {campaign.status === 'draft' && (
-                                <Button
-                  size="sm"
-                                  onClick={() => handleSendCampaign(campaign.id)}
-                                  className="bg-green-600 hover:bg-green-700"
-                >
-                                  <Send className="w-4 h-4 mr-1" />
-                                  Send Now
-                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => openCampaignEdit(campaign)}
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSendCampaign(campaign.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <Send className="w-4 h-4 mr-1" />
+                                    Send Now
+                                  </Button>
+                                </>
                               )}
                               <Button 
                                 size="sm" 
@@ -1512,7 +1741,8 @@ export default function NewsletterAdminPage() {
         </CardContent>
       </Card>
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </div>
 
       {/* Email Preview Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
@@ -1662,6 +1892,7 @@ export default function NewsletterAdminPage() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 } 

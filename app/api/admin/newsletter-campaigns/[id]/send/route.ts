@@ -11,11 +11,12 @@ interface Article {
   id: string
   title: string
   slug: string
-  excerpt?: string
+  summary?: string
   content?: string
-  featured_image?: string
-  category: string
-  subcategory?: string
+  hero_image_url?: string
+  categories?: {
+    slug: string
+  }
 }
 
 interface CampaignArticle {
@@ -25,7 +26,7 @@ interface CampaignArticle {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin access
@@ -34,30 +35,15 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const campaignId = params.id
+    const campaignId = (await params).id
     const supabase = await createClient()
 
     console.log('📧 Starting newsletter campaign send process:', campaignId)
 
-    // Get campaign details with associated articles
+    // Get campaign details (temporarily without articles until table is created)
     const { data: campaign, error: campaignError } = await supabase
       .from('newsletter_campaigns')
-      .select(`
-        *,
-        newsletter_campaign_articles (
-          position,
-          articles (
-            id,
-            title,
-            slug,
-            excerpt,
-            content,
-            featured_image,
-            category,
-            subcategory
-          )
-        )
-      `)
+      .select('*')
       .eq('id', campaignId)
       .single()
 
@@ -90,11 +76,30 @@ export async function POST(
       })
       .eq('id', campaignId)
 
-    // Get confirmed subscribers
-    const { data: subscribers, error: subscribersError } = await supabase
-      .from('newsletter_subscribers')
-      .select('email')
-      .eq('status', 'confirmed')
+    // Get subscribers based on campaign targeting
+    let subscribersData: any[] = []
+    let subscribersError: any = null
+
+    if (campaign.target_all_subscribers || !campaign.target_list_id) {
+      // Get all confirmed subscribers
+      const result = await supabase
+        .from('newsletter_subscribers')
+        .select('email')
+        .eq('status', 'confirmed')
+      subscribersData = result.data || []
+      subscribersError = result.error
+    } else {
+      // Get subscribers from specific list
+      const result = await supabase
+        .from('newsletter_subscriber_list_members')
+        .select(`
+          newsletter_subscribers!inner(email)
+        `)
+        .eq('list_id', campaign.target_list_id)
+        .eq('newsletter_subscribers.status', 'confirmed')
+      subscribersData = result.data || []
+      subscribersError = result.error
+    }
 
     if (subscribersError) {
       console.error('❌ Error fetching subscribers:', subscribersError)
@@ -103,7 +108,17 @@ export async function POST(
       }, { status: 500 })
     }
 
-    const subscriberList: Subscriber[] = subscribers || []
+    // Transform the data based on query type
+    let subscriberList: Subscriber[] = []
+    if (campaign.target_all_subscribers || !campaign.target_list_id) {
+      // Direct subscriber data
+      subscriberList = (subscribersData as any[])?.map((s: any) => ({ email: s.email })) || []
+    } else {
+      // List member data - extract nested subscriber emails
+      subscriberList = (subscribersData as any[])?.map((item: any) => ({ 
+        email: item.newsletter_subscribers.email 
+      })) || []
+    }
 
     if (subscriberList.length === 0) {
       console.log('⚠️ No confirmed subscribers found')
@@ -123,21 +138,33 @@ export async function POST(
 
     console.log(`📧 Found ${subscriberList.length} confirmed subscribers`)
 
-    // Sort articles by position - fix type issues
-    const campaignArticles: CampaignArticle[] = campaign.newsletter_campaign_articles || []
-    const articles: Article[] = campaignArticles
-      .sort((a, b) => a.position - b.position)
-      .map(item => item.articles)
-      .filter(Boolean) // Remove any null/undefined articles
+    // Use the campaign's pre-generated HTML content which already includes styled articles
+    console.log(`📄 Using campaign's pre-generated HTML content`)
 
-    console.log(`📄 Campaign includes ${articles.length} articles`)
-
-    // Generate enhanced HTML content with articles
-    const enhancedHtmlContent = generateEnhancedEmailContent(
-      campaign.html_content,
-      articles,
-      campaign
-    )
+    // The campaign.html_content already contains the properly formatted articles with correct links
+    // Just need to replace dynamic placeholders
+    let enhancedHtmlContent = campaign.html_content || campaign.content || ''
+    
+    // Replace dynamic placeholders
+    const today = new Date()
+    const formattedDate = today.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    })
+    
+    enhancedHtmlContent = enhancedHtmlContent.replace(/{{date}}/g, formattedDate)
+    enhancedHtmlContent = enhancedHtmlContent.replace(/{{campaign_name}}/g, campaign.name)
+    
+    // Add campaign-specific data for airfare deals
+    if (campaign.campaign_type === 'airfare_daily') {
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{destination}}/g, 'Amazing Destinations')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{price}}/g, '299')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{origin}}/g, 'Major US Cities')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{dates}}/g, 'Various dates available')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{discount}}/g, '40')
+      enhancedHtmlContent = enhancedHtmlContent.replace(/{{booking_link}}/g, 'https://maxyourpoints.com/blog')
+    }
 
     const mailjetService = new MailjetService()
     let successCount = 0
@@ -172,7 +199,7 @@ export async function POST(
             from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
             subject: campaign.subject,
             html: personalizedHtml,
-            text: generateTextVersion(campaign.subject, articles)
+            text: generateTextVersion(campaign.subject, [])
           })
 
           // Track analytics
@@ -261,13 +288,14 @@ export async function POST(
     // Try to reset campaign status if something went wrong
     try {
       const supabase = await createClient()
+      const resolvedParams = await params
       await supabase
         .from('newsletter_campaigns')
         .update({ 
           status: 'draft',
           updated_at: new Date().toISOString()
         })
-        .eq('id', params.id)
+        .eq('id', resolvedParams.id)
     } catch (resetError) {
       console.error('❌ Failed to reset campaign status:', resetError)
     }
@@ -291,7 +319,7 @@ function generateEnhancedEmailContent(
 
   // Generate article HTML based on campaign type
   const articlesHtml = articles.map(article => {
-    const excerpt = article.excerpt || article.content?.substring(0, 150) + '...' || 'No excerpt available'
+    const excerpt = article.summary || article.content?.substring(0, 150) + '...' || 'No excerpt available'
     const readMoreUrl = `https://maxyourpoints.com/blog/${article.slug}`
     
     if (campaign.campaign_type === 'weekly') {
@@ -358,7 +386,7 @@ function generateTextVersion(subject: string, articles: Article[]): string {
     textContent += 'Featured Articles:\n\n'
     articles.forEach((article, index) => {
       textContent += `${index + 1}. ${article.title}\n`
-      const excerpt = article.excerpt || article.content?.substring(0, 100) + '...' || ''
+      const excerpt = article.summary || article.content?.substring(0, 100) + '...' || ''
       textContent += `   ${excerpt}\n`
       textContent += `   Read more: https://maxyourpoints.com/blog/${article.slug}\n\n`
     })

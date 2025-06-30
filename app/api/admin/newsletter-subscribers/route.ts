@@ -32,12 +32,11 @@ export async function GET(request: Request) {
       )
     }
 
-    // Map database fields to expected UI format
+    // Map database fields to expected UI format and normalize status values
     const formattedSubscribers = subscribers?.map(sub => ({
       id: sub.id,
       email: sub.email,
-      status: sub.status === 'active' ? 'confirmed' : 
-              sub.status === 'unsubscribed' ? 'unsubscribed' : 'pending',
+      status: sub.status === 'active' ? 'confirmed' : sub.status, // Handle legacy 'active' status
       subscribed_at: sub.subscribed_at,
       unsubscribed_at: sub.unsubscribed_at,
       source: sub.source || 'website',

@@ -46,7 +46,17 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[9998] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center p-4"
+            style={{
+              zIndex: 9999,
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh'
+            }}
             onClick={onClose}
           />
           
@@ -61,7 +71,17 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({
               stiffness: 300,
               duration: 0.5
             }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none"
+            style={{
+              zIndex: 10000,
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh'
+            }}
           >
             <div 
               className="bg-white rounded-3xl shadow-2xl border border-emerald-100/50 w-full max-w-md mx-auto relative pointer-events-auto transform"
@@ -80,7 +100,8 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({
                 {/* Close button */}
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110 hover:bg-gray-100 rounded-full p-1 z-10"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110 hover:bg-gray-100 rounded-full p-1"
+                  style={{ zIndex: 10 }}
                 >
                   <X size={20} />
                 </button>

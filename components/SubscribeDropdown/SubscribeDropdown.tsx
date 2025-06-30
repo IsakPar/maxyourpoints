@@ -13,24 +13,29 @@ interface SubscribeDropdownProps {
 export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, onClose, onSuccess }) => {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState("")
+  const [messageType, setMessageType] = useState<"success" | "error" | "info" | "">("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('Navbar subscribe button clicked!', email) // Debug log
+    // Clear any previous messages
+    setMessage("")
+    setMessageType("")
     
     if (!email) {
-      alert("Please enter your email address")
+      setMessage("Please enter your email address")
+      setMessageType("error")
       return
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert("Please enter a valid email address")
+      setMessage("Please enter a valid email address")
+      setMessageType("error")
       return
     }
 
     setIsSubmitting(true)
-    console.log('Sending subscription request...') // Debug log
 
     try {
       const response = await fetch("/api/subscribe", {
@@ -41,24 +46,44 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
         body: JSON.stringify({ email }),
       })
 
-      console.log('Response status:', response.status) // Debug log
       const responseData = await response.json()
-      console.log('Response data:', responseData) // Debug log
 
-      if (!response.ok) {
-        throw new Error("Subscription failed")
+      if (response.ok && responseData.success) {
+        if (responseData.alreadySubscribed) {
+          // User is already subscribed
+          setMessage(responseData.message)
+          setMessageType("success")
+          // Don't call onSuccess since they're already subscribed
+          setTimeout(() => {
+            onClose()
+            setMessage("")
+            setMessageType("")
+          }, 3000)
+        } else if (responseData.requiresConfirmation) {
+          // User needs to confirm email
+          setMessage(responseData.message)
+          setMessageType("info")
+          setTimeout(() => {
+            onClose()
+            setMessage("")
+            setMessageType("")
+          }, 4000)
+        } else {
+          // New subscription success
+          setMessage("Successfully subscribed! Please check your email.")
+          setMessageType("success")
+          onSuccess(email)
+          setTimeout(() => setEmail(""), 5000)
+        }
+      } else {
+        // Handle API errors
+        setMessage(responseData.error || "Failed to subscribe. Please try again later.")
+        setMessageType("error")
       }
-
-      console.log('Subscription successful!') // Debug log
-      
-      // Call the parent's success handler with the email
-      onSuccess(email)
-      
-      // Clear email after delay (match CTA/Footer timing)
-      setTimeout(() => setEmail(""), 5000)
     } catch (error) {
-      console.error('Subscription error:', error) // Debug log
-      alert("Failed to subscribe. Please try again later.")
+      console.error('Subscription error:', error)
+      setMessage("Network error. Please check your connection and try again.")
+      setMessageType("error")
     } finally {
       setIsSubmitting(false)
     }
@@ -67,9 +92,9 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-25" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-black bg-opacity-25" onClick={onClose}>
       <div 
-        className="absolute right-4 top-16 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-60"
+        className="absolute right-4 top-16 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-[61]"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -101,6 +126,20 @@ export const SubscribeDropdown: React.FC<SubscribeDropdownProps> = ({ isOpen, on
               required
             />
           </div>
+          
+          {message && (
+            <div className={`p-3 rounded-lg text-sm ${
+              messageType === "success" 
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                : messageType === "error"
+                ? "bg-red-50 text-red-700 border border-red-200"
+                : messageType === "info"
+                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                : "bg-gray-50 text-gray-700 border border-gray-200"
+            }`}>
+              {message}
+            </div>
+          )}
           
           <GradientButton type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? "Subscribing..." : "Subscribe"}

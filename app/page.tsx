@@ -4,6 +4,7 @@ import Header from "@/components/Header"
 import BlogShowcase from "@/components/BlogShowcase"
 import BlogCarousel from "@/components/BlogCarousel/BlogCarousel"
 import { getFeaturedArticles } from "@/lib/articles-simple"
+import { ConfirmationBanner } from "@/components/blog/ConfirmationBanner"
 
 // Transform database articles to component format
 function transformToShowcaseFormat(articles: any[]) {
@@ -54,6 +55,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50">
+      <ConfirmationBanner />
       <Header />
       <BlogShowcase posts={showcasePosts} />
       <div className="bg-gradient-to-r from-teal-50 to-emerald-100">

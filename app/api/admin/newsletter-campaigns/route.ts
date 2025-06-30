@@ -12,21 +12,10 @@ export async function GET(request: NextRequest) {
 
     console.log('📧 Admin fetching newsletter campaigns from database')
 
+    // Temporarily fetch campaigns without article relationships to fix the 500 error
     const { data: campaigns, error } = await supabase
       .from('newsletter_campaigns')
-      .select(`
-        *,
-        newsletter_campaign_articles (
-          article_id,
-          position,
-          articles (
-            id,
-            title,
-            slug,
-            summary
-          )
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -107,30 +96,26 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Associate selected articles with the campaign
+    // TODO: Associate selected articles with the campaign
+    // Note: newsletter_campaign_articles table needs to be created first
     if (selected_articles.length > 0) {
-      const articleAssociations = selected_articles.map((articleId: string, index: number) => ({
-        campaign_id: campaign.id,
-        article_id: articleId,
-        position: index
-      }))
+      console.log(`📝 Selected ${selected_articles.length} articles for campaign (table creation pending)`)
+      // const articleAssociations = selected_articles.map((articleId: string, index: number) => ({
+      //   campaign_id: campaign.id,
+      //   article_id: articleId,
+      //   position: index
+      // }))
 
-      const { error: articlesError } = await supabase
-        .from('newsletter_campaign_articles')
-        .insert(articleAssociations)
+      // const { error: articlesError } = await supabase
+      //   .from('newsletter_campaign_articles')
+      //   .insert(articleAssociations)
 
-      if (articlesError) {
-        console.error('❌ Error associating articles:', articlesError)
-        // Try to clean up the campaign if article association fails
-        await supabase
-          .from('newsletter_campaigns')
-          .delete()
-          .eq('id', campaign.id)
-        
-        return NextResponse.json({ 
-          error: 'Failed to associate articles with campaign' 
-        }, { status: 500 })
-      }
+      // if (articlesError) {
+      //   console.error('❌ Error associating articles:', articlesError)
+      //   return NextResponse.json({ 
+      //     error: 'Failed to associate articles with campaign' 
+      //   }, { status: 500 })
+      // }
     }
 
     console.log('✅ Campaign created successfully:', campaign.id)
@@ -213,31 +198,33 @@ export async function PUT(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Update article associations if provided
+    // TODO: Update article associations if provided
+    // Note: newsletter_campaign_articles table needs to be created first
     if (selected_articles.length > 0) {
+      console.log(`📝 Updating campaign with ${selected_articles.length} articles (table creation pending)`)
       // First, remove existing associations
-      await supabase
-        .from('newsletter_campaign_articles')
-        .delete()
-        .eq('campaign_id', id)
+      // await supabase
+      //   .from('newsletter_campaign_articles')
+      //   .delete()
+      //   .eq('campaign_id', id)
 
       // Then add new associations
-      const articleAssociations = selected_articles.map((articleId: string, index: number) => ({
-        campaign_id: id,
-        article_id: articleId,
-        position: index
-      }))
+      // const articleAssociations = selected_articles.map((articleId: string, index: number) => ({
+      //   campaign_id: id,
+      //   article_id: articleId,
+      //   position: index
+      // }))
 
-      const { error: articlesError } = await supabase
-        .from('newsletter_campaign_articles')
-        .insert(articleAssociations)
+      // const { error: articlesError } = await supabase
+      //   .from('newsletter_campaign_articles')
+      //   .insert(articleAssociations)
 
-      if (articlesError) {
-        console.error('❌ Error updating article associations:', articlesError)
-        return NextResponse.json({ 
-          error: 'Failed to update article associations' 
-        }, { status: 500 })
-      }
+      // if (articlesError) {
+      //   console.error('❌ Error updating article associations:', articlesError)
+      //   return NextResponse.json({ 
+      //     error: 'Failed to update article associations' 
+      //   }, { status: 500 })
+      // }
     }
 
     console.log('✅ Campaign updated successfully:', id)

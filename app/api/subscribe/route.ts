@@ -40,97 +40,129 @@ export async function POST(request: NextRequest) {
       .eq('email', email)
       .single()
 
+    let confirmationToken: string = ''
+
     if (existingSubscriber) {
       if (existingSubscriber.status === 'confirmed') {
         return NextResponse.json({ 
-          message: 'You are already subscribed to our newsletter!' 
+          success: true,
+          alreadySubscribed: true,
+          message: "Great news! You're already part of our Max Your Points community! 🎉",
+          details: "You're all set to receive our latest travel tips, deals, and point strategies."
         })
       }
       
-      // Reactivate if unsubscribed
-      if (existingSubscriber.status === 'unsubscribed') {
-        await supabase
-          .from('newsletter_subscribers')
-          .update({ 
-            status: 'confirmed', 
-            subscribed_at: new Date().toISOString(),
-            unsubscribed_at: null
-          })
-          .eq('email', email)
-        
-        console.log('✅ Reactivated existing subscriber:', email)
-      }
-    } else {
-      // Create new subscriber
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .insert({
-          email,
-          status: 'confirmed',
-          source: 'website',
-          subscribed_at: new Date().toISOString()
+      if (existingSubscriber.status === 'pending') {
+        return NextResponse.json({ 
+          success: true,
+          requiresConfirmation: true,
+          message: 'Almost there! Please check your email and confirm your subscription.',
+          details: "We've sent you a confirmation link. Click it to start receiving our newsletter!"
         })
-
-      if (error) {
-        console.error('Database error:', error)
-        return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
       }
-
-      console.log('✅ New subscriber added:', email)
     }
 
-    // Get the subscription confirmation template
-    const { data: template } = await supabase
-      .from('newsletter_templates')
-      .select('*')
-      .eq('name', 'Subscription Confirmation')
+    // TEMPORARY: Use direct SQL instead of the broken function
+    // Generate a confirmation token
+    const crypto = require('crypto')
+    confirmationToken = crypto.randomBytes(32).toString('hex')
+    
+    // Insert subscriber directly
+    const { data: insertResult, error } = await supabase
+      .from('newsletter_subscribers')
+      .insert({
+        email: email,
+        status: 'pending',
+        source: 'website',
+        confirmation_token: confirmationToken,
+        confirmation_sent_at: new Date().toISOString(),
+        subscribed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select('id, email, status')
       .single()
 
-    // Send welcome email with beautiful template
+    if (error) {
+      console.error('Database error:', error)
+      
+      // Check if it's a duplicate email error
+      if (error.code === '23505') {
+        // Email already exists - this is fine, we'll handle it gracefully
+        console.log('📧 Email already exists, checking status...')
+        
+        const { data: existingUser } = await supabase
+          .from('newsletter_subscribers')
+          .select('*')
+          .eq('email', email)
+          .single()
+        
+        if (existingUser?.status === 'confirmed') {
+          return NextResponse.json({
+            success: true,
+            alreadySubscribed: true,
+            message: "Great news! You're already part of our Max Your Points community! 🎉",
+            details: "You're all set to receive our latest travel tips, deals, and point strategies."
+          })
+        } else if (existingUser?.status === 'pending') {
+          // Update with new token
+          confirmationToken = crypto.randomBytes(32).toString('hex')
+          await supabase
+            .from('newsletter_subscribers')
+            .update({
+              confirmation_token: confirmationToken,
+              confirmation_sent_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', email)
+          
+          // Continue with sending email...
+        }
+      } else {
+        return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
+      }
+    }
+
+    console.log('✅ New subscriber created with confirmation token:', email)
+
+    // Send confirmation email
     try {
       const mailjetService = new MailjetService()
       
-      // Generate personalized unsubscribe URL
-      const unsubscribeUrl = `https://maxyourpoints.com/unsubscribe?email=${encodeURIComponent(email)}`
+      // Generate confirmation URL
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://maxyourpoints.com'
+      const confirmationUrl = `${baseUrl}/api/confirm-email?token=${confirmationToken}`
       
-      let emailHtml: string
-      let emailSubject: string
-      
-      if (template) {
-        // Use the beautiful custom template
-        emailHtml = template.html_content
-          .replace(/{{subscriber_name}}/g, email.split('@')[0]) // Use email prefix as name
-          .replace(/{{subscriber_email}}/g, email)
-          .replace(/{{unsubscribe_url}}/g, unsubscribeUrl)
-        emailSubject = template.subject
-      } else {
-        // Fallback to simple template
-        emailSubject = '🎉 Welcome to Max Your Points! Your travel journey starts now ✈️'
-        emailHtml = generateFallbackWelcomeEmail(email, unsubscribeUrl)
-      }
+      const emailSubject = '✉️ Please confirm your subscription to Max Your Points'
+      const emailHtml = generateConfirmationEmail(email, confirmationUrl)
 
-      console.log('📧 Sending email via Mailjet to:', email)
+      console.log('📧 Sending confirmation email via Mailjet to:', email)
       
-      const result = await mailjetService.sendEmail({
+      const emailResult = await mailjetService.sendEmail({
         to: email,
         from: process.env.MAILJET_FROM_EMAIL || 'newsletter@maxyourpoints.com',
         subject: emailSubject,
         html: emailHtml,
-        text: `Welcome to Max Your Points!\n\nThanks for subscribing to our newsletter. You'll receive weekly travel tips, deals, and credit card strategies.\n\nUnsubscribe: ${unsubscribeUrl}`
+        text: `Please confirm your subscription to Max Your Points!\n\nClick this link to confirm: ${confirmationUrl}\n\nThis link will expire in 7 days.`
       })
 
-      console.log('✅ Welcome email sent successfully:', result.messageId)
+      console.log('✅ Confirmation email sent successfully:', emailResult.messageId)
 
       return NextResponse.json({ 
-        message: 'Successfully subscribed! Check your email for a welcome message.',
-        messageId: result.messageId
+        success: true,
+        requiresConfirmation: true,
+        message: 'Please check your email and click the confirmation link to complete your subscription.',
+        details: 'We\'ve sent you a confirmation email with a link to activate your subscription.',
+        messageId: emailResult.messageId
       })
 
     } catch (emailError) {
       console.error('Email sending failed:', emailError)
-      // Don't fail the subscription if email fails
       return NextResponse.json({ 
-        message: 'Successfully subscribed, but welcome email could not be sent.'
+        success: true,
+        requiresConfirmation: true,
+        message: 'Subscription created but confirmation email could not be sent. Please contact support.',
+        details: 'Your subscription is pending email confirmation.'
       })
     }
 
@@ -140,6 +172,67 @@ export async function POST(request: NextRequest) {
       error: 'Internal server error' 
     }, { status: 500 })
   }
+}
+
+function generateConfirmationEmail(email: string, confirmationUrl: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Confirm your subscription to Max Your Points</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f0fdf4; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 50px 20px; text-align: center; }
+            .header h1 { color: white; font-size: 36px; margin-bottom: 15px; font-weight: 700; }
+            .header p { color: rgba(255,255,255,0.95); font-size: 20px; }
+            .content { padding: 40px 30px; text-align: center; }
+            .intro { font-size: 18px; color: #374151; margin-bottom: 30px; }
+            .confirm-btn { display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 18px; margin: 30px 0; }
+            .footer { background: #1f2937; color: white; padding: 30px 20px; text-align: center; }
+            .expire-notice { font-size: 14px; color: #6b7280; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Almost there! ✉️</h1>
+                <p>Just one click to confirm your subscription</p>
+            </div>
+            
+            <div class="content">
+                <div class="intro">
+                    Hey ${email.split('@')[0]}! 👋<br><br>
+                    Welcome to Max Your Points! We're excited to have you join our community of smart travelers.
+                    <br><br>
+                    Please confirm your email address to start receiving our weekly travel tips, exclusive deals, and credit card strategies.
+                </div>
+                
+                <a href="${confirmationUrl}" class="confirm-btn">
+                    ✅ Confirm My Subscription
+                </a>
+                
+                <div class="expire-notice">
+                    This confirmation link will expire in 7 days. If you didn't sign up for our newsletter, you can safely ignore this email.
+                </div>
+            </div>
+            
+            <div class="footer">
+                <h3 style="color: #3b82f6; margin-bottom: 15px;">Max Your Points</h3>
+                <p style="color: #9ca3af; margin: 15px 0;">
+                    Making travel dreams affordable, one point at a time.
+                </p>
+                <div style="font-size: 12px; color: #6b7280; margin-top: 20px;">
+                    <p>Max Your Points | Built with love by Isak Parild</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `
 }
 
 function generateFallbackWelcomeEmail(email: string, unsubscribeUrl: string): string {
