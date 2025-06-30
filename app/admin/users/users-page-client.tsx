@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
-import { Users, Plus, Mail, Calendar, Shield, Edit, Trash2, Clock, UserX, AlertTriangle, Eye } from 'lucide-react'
+import { Users, Plus, Mail, Calendar, Shield, Edit, Trash2, Clock, UserX, AlertTriangle, Eye, PenTool } from 'lucide-react'
 import CreateUserDialog from '../components/CreateUserDialog'
 import { api } from '@/lib/api'
 import { AuthUser } from '@/lib/auth'
@@ -19,7 +19,7 @@ import { hasPermission, getRoleDisplayName } from '@/lib/permissions'
 interface User {
   id: string
   email: string
-  role: 'admin' | 'editor' | 'user'
+  role: 'admin' | 'editor' | 'author' | 'subscriber'
   full_name?: string
   created_at: string
   last_sign_in_at?: string | null
@@ -105,7 +105,9 @@ export default function UsersPageClient({ currentUser }: UsersPageClientProps) {
         return 'bg-red-100 text-red-800 border-red-200'
       case 'editor':
         return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'user':
+      case 'author':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'subscriber':
         return 'bg-gray-100 text-gray-800 border-gray-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
@@ -172,7 +174,7 @@ export default function UsersPageClient({ currentUser }: UsersPageClientProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
@@ -209,12 +211,24 @@ export default function UsersPageClient({ currentUser }: UsersPageClientProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Regular Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Authors</CardTitle>
+            <PenTool className="w-4 h-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">
+              {users.filter(u => u.role === 'author').length}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Subscribers</CardTitle>
             <Users className="w-4 h-4 text-gray-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {users.filter(u => u.role === 'user').length}
+              {users.filter(u => u.role === 'subscriber').length}
             </div>
           </CardContent>
         </Card>
@@ -342,7 +356,8 @@ export default function UsersPageClient({ currentUser }: UsersPageClientProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="subscriber">Subscriber</SelectItem>
+                    <SelectItem value="author">Author</SelectItem>
                     <SelectItem value="editor">Editor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
@@ -350,8 +365,9 @@ export default function UsersPageClient({ currentUser }: UsersPageClientProps) {
               </div>
               
               <div className="text-sm text-gray-600">
-                <p><strong>User:</strong> Basic access</p>
-                <p><strong>Editor:</strong> Can create and edit content</p>
+                <p><strong>Subscriber:</strong> Basic access to view content</p>
+                <p><strong>Author:</strong> Can create and edit their own content</p>
+                <p><strong>Editor:</strong> Can create, edit, and publish content</p>
                 <p><strong>Admin:</strong> Full access to all features</p>
               </div>
             </div>

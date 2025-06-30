@@ -15,7 +15,7 @@ import {
   DialogTrigger 
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Plus, AlertCircle, Copy, Shield, Edit, Users } from 'lucide-react'
+import { Loader2, Plus, AlertCircle, Copy, Shield, Edit, Users, PenTool } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 
@@ -28,7 +28,7 @@ export default function CreateUserDialog({ onUserCreated }: CreateUserDialogProp
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'user' | 'editor' | 'admin'>('editor')
+  const [role, setRole] = useState<'subscriber' | 'author' | 'editor' | 'admin'>('subscriber')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [createdUser, setCreatedUser] = useState<{
@@ -72,7 +72,13 @@ export default function CreateUserDialog({ onUserCreated }: CreateUserDialogProp
           color: 'text-blue-600',
           description: 'Can create, edit, and publish content'
         }
-      case 'user':
+      case 'author':
+        return {
+          icon: PenTool,
+          color: 'text-green-600',
+          description: 'Can create and edit their own content'
+        }
+      case 'subscriber':
         return {
           icon: Users,
           color: 'text-gray-600',
@@ -129,7 +135,7 @@ export default function CreateUserDialog({ onUserCreated }: CreateUserDialogProp
     setEmail('')
     setFullName('')
     setPassword('')
-    setRole('editor')
+    setRole('subscriber')
     setError('')
     setCreatedUser(null)
     setOpen(false)
@@ -243,10 +249,16 @@ export default function CreateUserDialog({ onUserCreated }: CreateUserDialogProp
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">
+                  <SelectItem value="subscriber">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-600" />
-                      <span>User - Basic Access</span>
+                      <span>Subscriber - Basic Access</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="author">
+                    <div className="flex items-center gap-2">
+                      <PenTool className="w-4 h-4 text-green-600" />
+                      <span>Author - Content Creation</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="editor">

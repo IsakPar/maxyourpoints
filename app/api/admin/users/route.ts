@@ -85,6 +85,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Validate role enum value
+    const validRoles = ['admin', 'editor', 'author', 'subscriber']
+    const userRole = role || 'subscriber'
+    
+    if (!validRoles.includes(userRole)) {
+      return NextResponse.json({
+        error: 'Invalid role',
+        message: `Role must be one of: ${validRoles.join(', ')}`
+      }, { status: 400 })
+    }
+
     try {
       // Check if user already exists
       const { data: existingUser } = await supabaseAdmin
@@ -112,15 +123,27 @@ export async function POST(request: NextRequest) {
           password_hash: hashedPassword,
           name,
           full_name: fullName || name,
-          role: role || 'USER',
+          role: userRole,
           verified: true
         })
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Database error creating user:', error)
+        
+        // Provide specific error message for enum constraint violations
+        if (error.message.includes('invalid input value for enum user_role')) {
+          return NextResponse.json({
+            error: 'Invalid user role',
+            message: `Role must be one of: ${validRoles.join(', ')}`
+          }, { status: 400 })
+        }
+        
+        throw error
+      }
 
-      console.log(`✅ User created successfully: ${email}`)
+      console.log(`✅ User created successfully: ${email} with role: ${userRole}`)
 
       return NextResponse.json({
         success: true,
@@ -133,12 +156,12 @@ export async function POST(request: NextRequest) {
         }
       })
 
-    } catch (dbError) {
+    } catch (dbError: any) {
       console.error('Database error creating user:', dbError)
       return NextResponse.json({
-        error: 'Database unavailable',
-        message: 'User creation disabled - database connection issue'
-      }, { status: 503 })
+        error: 'Database error',
+        message: dbError.message || 'User creation failed due to database error'
+      }, { status: 500 })
     }
 
   } catch (error: any) {
@@ -179,6 +202,15 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Validate role if it's being updated
+    const validRoles = ['admin', 'editor', 'author', 'subscriber']
+    if (updateData.role && !validRoles.includes(updateData.role)) {
+      return NextResponse.json({
+        error: 'Invalid role',
+        message: `Role must be one of: ${validRoles.join(', ')}`
+      }, { status: 400 })
+    }
+
     try {
       // Update user in Supabase
       const { data: updatedUser, error } = await supabaseAdmin
@@ -194,22 +226,39 @@ export async function PATCH(request: NextRequest) {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Database error updating user:', error)
+        
+        // Provide specific error message for enum constraint violations
+        if (error.message.includes('invalid input value for enum user_role')) {
+          return NextResponse.json({
+            error: 'Invalid user role',
+            message: `Role must be one of: ${validRoles.join(', ')}`
+          }, { status: 400 })
+        }
+        
+        throw error
+      }
 
       console.log(`✅ User updated successfully: ${userId}`)
 
       return NextResponse.json({
         success: true,
         message: 'User updated successfully',
-        user: updatedUser
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role
+        }
       })
 
-    } catch (dbError) {
+    } catch (dbError: any) {
       console.error('Database error updating user:', dbError)
       return NextResponse.json({
-        error: 'Database unavailable',
-        message: 'User update disabled - database connection issue'
-      }, { status: 503 })
+        error: 'Database error',
+        message: dbError.message || 'User update failed due to database error'
+      }, { status: 500 })
     }
 
   } catch (error: any) {
